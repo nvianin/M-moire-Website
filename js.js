@@ -6,7 +6,7 @@ Math.Clamp = (val, min, max) => {
 let canvas, ctx;
 let rooms = []
 let scale = 1;
-
+document.angle = 0;
 let tryspawn = () => {
     for (let i = 0; i < 50; i++) {
         rooms.push(
@@ -39,8 +39,8 @@ window.onload = () => {
     canvas = document.querySelector("canvas")
     ctx = canvas.getContext("2d");
     ctx.lineCap = "square"
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth * (Math.PI / 2) * .2;
+    canvas.height = window.innerWidth * (Math.PI / 2) * .2;
 
     while (rooms.length < 10) {
         tryspawn()
@@ -52,8 +52,10 @@ window.onload = () => {
     render()
 }
 let render = () => {
+    document.offset = offset;
     let toRemove = []
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    ctx.fillStyle = "red"
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(render);
     for (let i = 0; i < rooms.length; i++) {
         /* for (let j = 0; j < rooms.length; j++) {
@@ -82,13 +84,13 @@ let offset = {
     x: 0,
     y: 0
 }
-window.onmousedown = e => {
+window.onpointerdown = e => {
     canvas.style.cursor = "grabbing"
     mousedown = true;
     startPos.x = e.clientX - offset.x;
     startPos.y = e.clientY - offset.y;
 }
-window.onmouseup = e => {
+window.onpointerup = e => {
     offset.x = e.clientX - startPos.x;
     offset.y = e.clientY - startPos.y;
     canvas.style.cursor = "grab"
@@ -114,11 +116,11 @@ window.onresize = () => {
     canvas.height = innerHeight;
 }
 window.onkeydown = e => {
-    log(e.key)
     let direction = {
         x: 0,
         y: 0
     }
+    log(e.key)
     switch (e.key) {
         case "ArrowUp":
             direction.y -= 1;
@@ -134,4 +136,6 @@ window.onkeydown = e => {
             break;
     }
     log(direction)
+    document.angle += direction.x * .01;
+    canvas.style.transform = "rotate(" + document.angle + "rad) translate(-50%, -50%)"
 }
