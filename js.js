@@ -1,4 +1,5 @@
 let canvas, ctx;
+let rooms = []
 
 window.onload = () => {
     canvas = document.querySelector("canvas")
@@ -6,25 +7,14 @@ window.onload = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    let start = {
-        x: 0,
-        y: 0
-    }
-    for (var i = 0; i < 5; i++) {
-        ctx.beginPath()
-        ctx.strokeStyle = "black"
-        start.x = Math.random() * window.innerWidth;
-        start.y = Math.random() * window.innerHeight;
-        ctx.moveTo(start.x, start.y);
-        for (var j = 0; j < 3; j++) {
-            ctx.lineTo(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
-            ctx.stroke();
-        }
-        ctx.lineTo(start.x, start.y);
-        ctx.stroke()
+    for (let i = 0; i < 2; i++) {
+        rooms.push(new Room(400 * Math.random(), 400 * Math.random(), Math.random() * 200, Math.random() * 200));
     }
 }
 
 let render = () => {
     requestAnimationFrame(render);
+    for (room of rooms) {
+        room.draw(ctx);
+    }
 }
