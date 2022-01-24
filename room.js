@@ -2,6 +2,7 @@ let lorem = `Lorem Ipsum is simply dummy text of the printing and typesetting in
 
 Why do we use it?
 It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).`
+/* lorem = "bonsoir, je m'appelle henry et j'aime les gauffres surtout si elles sont à l'envers!" */
 
 class Room {
     constructor(x, y, w, h) {
@@ -20,6 +21,7 @@ class Room {
         this.points = [];
 
         this.text = lorem;
+        this.angle = Math.random() * Math.PI * 2;
 
 
         this.points.push({
@@ -45,30 +47,39 @@ class Room {
     }
 
     draw(ctx) {
+        ctx.translate(this.offset.x, this.offset.y)
+        ctx.rotate(this.angle)
         ctx.beginPath()
         ctx.strokeStyle = this.color;
         ctx.fillStyle = "white"
         ctx.moveTo(
-            (this.points[0].x + this.offset.x) * this.scale,
-            (this.points[0].y + this.offset.y) * this.scale
+            (this.points[0].x) * this.scale,
+            (this.points[0].y) * this.scale
         );
         for (let point of this.points) {
             ctx.lineTo(
-                (point.x + this.offset.x) * this.scale,
-                (point.y + this.offset.y) * this.scale
+                (point.x) * this.scale,
+                (point.y) * this.scale
             );
             ctx.stroke();
         }
         ctx.lineTo(
-            (this.points[0].x + this.offset.x) * this.scale,
-            (this.points[0].y + this.offset.y) * this.scale
+            (this.points[0].x) * this.scale,
+            (this.points[0].y) * this.scale
         );
+        ctx.closePath()
         ctx.lineWidth = 6;
         ctx.stroke();
         ctx.fill()
-        ctx.font = "20px Helvetica"
-        ctx.fillText(this.text, this.x + this.offset.x, this.y + this.offset.y);
-        this.getText(ctx);
+        ctx.fillStyle = "black"
+        ctx.font = "14px Helvetica"
+        let lines = this.getText(ctx);
+        let lineHeight = 2;
+        for (let line of lines) {
+            lineHeight += 20;
+            ctx.fillText(line, this.x + 4, this.y + lineHeight);
+        }
+        ctx.resetTransform()
     }
 
     aabb(other) {
@@ -82,17 +93,23 @@ class Room {
     }
 
     getText(ctx) {
-        let t = this.text.split(" ").reverse();
+        let t = this.text.split(" ");
         let length = ctx.measureText(this.text)
         /* log(this.text.split(" ")) */
         let lines = []
-        while (t.length > 0) {
-            let line = ""
-            for (let w of t) {
-                line += t.pop();
-                if (ctx.measureText(line).width)
-            }
+        let line = ""
+        for (let w of t) {
+            line += " " + w;
+            if (ctx.measureText(line).width >= this.width - 60 || t.length <= 0) {
+                /* log(line) */
+                lines.push(line);
+                line = ""
+            };
         }
         return lines
+    }
+
+    delete() {
+        this.killed = true;
     }
 }

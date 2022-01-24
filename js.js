@@ -7,14 +7,8 @@ let canvas, ctx;
 let rooms = []
 let scale = 1;
 
-window.onload = () => {
-    canvas = document.querySelector("canvas")
-    ctx = canvas.getContext("2d");
-    ctx.lineCap = "square"
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    for (let i = 0; i < 80; i++) {
+let tryspawn = () => {
+    for (let i = 0; i < 50; i++) {
         rooms.push(
             new Room(
                 innerWidth * 3 * Math.random(),
@@ -23,11 +17,42 @@ window.onload = () => {
                 Math.random() * 300 + 100
             ));
     }
+    let toRemove = []
+    for (let i = 0; i < rooms.length; i++) {
+        for (let j = 0; j < rooms.length; j++) {
+            if (rooms[i].aabb(rooms[j])) {
+                /* rooms[i].color = "red" */
+                /* rooms[i].delete() */
+                toRemove.push(j)
+                log("delete")
+            }
+        }
+    }
+    if (toRemove.length > 0) {
+        for (let i of toRemove) {
+            rooms.splice(i, 1)
+        }
+    }
+}
+
+window.onload = () => {
+    canvas = document.querySelector("canvas")
+    ctx = canvas.getContext("2d");
+    ctx.lineCap = "square"
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    while (rooms.length < 10) {
+        tryspawn()
+    }
+    log("done, ",
+        rooms.length)
 
 
     render()
 }
 let render = () => {
+    let toRemove = []
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     requestAnimationFrame(render);
     for (let i = 0; i < rooms.length; i++) {
@@ -38,6 +63,14 @@ let render = () => {
             }
         } */
         rooms[i].draw(ctx);
+        if (rooms[i].killed) {
+            toRemove.push(i)
+        }
+    }
+    if (toRemove.length > 0) {
+        for (let i of toRemove) {
+            rooms.splice(i, 1)
+        }
     }
 }
 let mousedown = false;
@@ -79,4 +112,26 @@ window.onwheel = e => {
 window.onresize = () => {
     canvas.width = innerWidth;
     canvas.height = innerHeight;
+}
+window.onkeydown = e => {
+    log(e.key)
+    let direction = {
+        x: 0,
+        y: 0
+    }
+    switch (e.key) {
+        case "ArrowUp":
+            direction.y -= 1;
+            break;
+        case "ArrowDown":
+            direction.y += 1;
+            break;
+        case "ArrowRight":
+            direction.x += 1;
+            break;
+        case "ArrowLeft":
+            direction.x -= 1;
+            break;
+    }
+    log(direction)
 }
