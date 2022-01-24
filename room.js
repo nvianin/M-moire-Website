@@ -68,6 +68,7 @@ class Room {
         ctx.fill()
         ctx.font = "20px Helvetica"
         ctx.fillText(this.text, this.x + this.offset.x, this.y + this.offset.y);
+        this.getText(ctx);
     }
 
     aabb(other) {
@@ -78,5 +79,20 @@ class Room {
                 return true;
             }
         }
+    }
+
+    getText(ctx) {
+        let t = this.text.split(" ").reverse();
+        let length = ctx.measureText(this.text)
+        /* log(this.text.split(" ")) */
+        let lines = []
+        while (t.length > 0) {
+            let line = ""
+            for (let w of t) {
+                line += t.pop();
+                if (ctx.measureText(line).width)
+            }
+        }
+        return lines
     }
 }
