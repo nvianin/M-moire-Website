@@ -13,16 +13,14 @@ let tryspawn = () => {
             new Room(
                 innerWidth * 3 * Math.random(),
                 innerHeight * 3 * Math.random(),
-                Math.random() * 300 + 100,
+                Math.random() * 500 + 250,
                 Math.random() * 300 + 100
             ));
     }
-    let toRemove = []
+    /* let toRemove = []
     for (let i = 0; i < rooms.length; i++) {
         for (let j = 0; j < rooms.length; j++) {
             if (rooms[i].aabb(rooms[j])) {
-                /* rooms[i].color = "red" */
-                /* rooms[i].delete() */
                 toRemove.push(j)
                 log("delete")
             }
@@ -32,17 +30,17 @@ let tryspawn = () => {
         for (let i of toRemove) {
             rooms.splice(i, 1)
         }
-    }
+    } */
 }
 
 window.onload = () => {
     canvas = document.querySelector("canvas")
     ctx = canvas.getContext("2d");
     ctx.lineCap = "square"
-    canvas.width = window.innerWidth * (Math.PI / 2) * .2;
-    canvas.height = window.innerWidth * (Math.PI / 2) * .2;
+    canvas.width = window.innerWidth * (Math.PI / 2);
+    canvas.height = window.innerWidth * (Math.PI / 2);
 
-    while (rooms.length < 10) {
+    while (rooms.length < 11) {
         tryspawn()
     }
     log("done, ",
@@ -54,25 +52,14 @@ window.onload = () => {
 let render = () => {
     document.offset = offset;
     let toRemove = []
-    ctx.fillStyle = "red"
+    ctx.fillStyle = "white"
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(render);
+    /* ctx.translate(offset.x, offset.y); */
+    ctx.scale(scale, scale);
+    /* ctx.translate(-offset.x, -offset.y); */
     for (let i = 0; i < rooms.length; i++) {
-        /* for (let j = 0; j < rooms.length; j++) {
-            if (rooms[j].aabb(rooms[i])) {
-                rooms[i].color = "red"
-                rooms[j].color = "red"
-            }
-        } */
         rooms[i].draw(ctx);
-        if (rooms[i].killed) {
-            toRemove.push(i)
-        }
-    }
-    if (toRemove.length > 0) {
-        for (let i of toRemove) {
-            rooms.splice(i, 1)
-        }
     }
 }
 let mousedown = false;
@@ -105,11 +92,11 @@ window.onmousemove = e => {
     }
 }
 window.onwheel = e => {
-    /*  scale = Math.Clamp(scale - e.deltaY * .0001, .4, 5)
-     log(scale)
-     for (let r of rooms) {
-         r.scale = scale;
-     } */
+    scale = Math.Clamp(scale - e.deltaY * .0001, .4, 5)
+    log(scale)
+    /* for (let r of rooms) {
+        r.scale = scale;
+    } */
 }
 window.onresize = () => {
     canvas.width = innerWidth;
@@ -136,6 +123,6 @@ window.onkeydown = e => {
             break;
     }
     log(direction)
-    document.angle += direction.x * .01;
-    canvas.style.transform = "rotate(" + document.angle + "rad) translate(-50%, -50%)"
+    document.angle += direction.x * .04;
+    canvas.style.transform = "rotate(" + document.angle + "rad)" /* +" translate(-50%, -50%)" */
 }
