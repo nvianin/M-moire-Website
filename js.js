@@ -59,7 +59,7 @@ let render = () => {
     ctx.scale(scale, scale);
     /* ctx.translate(-offset.x, -offset.y); */
     for (let i = 0; i < rooms.length; i++) {
-        rooms[i].draw(ctx);
+        if (rooms[i].cull()) rooms[i].draw(ctx);
     }
 }
 let mousedown = false;
@@ -89,6 +89,9 @@ window.onmousemove = e => {
             r.offset.x = e.clientX - startPos.x;
             r.offset.y = e.clientY - startPos.y;
         }
+        offset.x = e.clientX - startPos.x;
+        offset.y = e.clientY - startPos.y;
+
     }
 }
 window.onwheel = e => {

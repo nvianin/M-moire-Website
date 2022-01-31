@@ -87,6 +87,7 @@ class Room {
                 return true;
             }
         }
+        return false;
     }
 
     getText(ctx) {
@@ -95,18 +96,34 @@ class Room {
         /* log(this.text.split(" ")) */
         let lines = []
         let line = ""
+        let i = 0;
         for (let w of t) {
             line += " " + w;
-            if (ctx.measureText(line).width >= this.width - 60 || t.length <= 0) {
+            if (ctx.measureText(line).width >= this.width - 60 || i >= t.length - 1) {
                 /* log(line) */
                 lines.push(line);
                 line = ""
             };
+            i++
         }
         return lines
     }
 
     delete() {
         this.killed = true;
+    }
+
+    cull() {
+        /* return true; */
+        let other = new Room(-offset.x, -offset.y, innerWidth * 1.5, innerHeight * 1.5)
+        /* if (Math.abs((this.offset.x + this.offset.y) + (offset.x + offset.y)) < innerWidth * 2) {
+            return true
+        } else {
+            ctx.moveTo(this.x, this.y)
+            ctx.lineTo(offset.x, offset.y)
+            ctx.stroke()
+            return false
+        } */
+        return this.aabb(other);
     }
 }
