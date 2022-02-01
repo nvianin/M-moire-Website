@@ -43,13 +43,13 @@ window.onload = () => {
     canvas.width = window.innerWidth * (Math.PI / 2);
     canvas.height = window.innerWidth * (Math.PI / 2);
 
+
+
     while (rooms.length < 11) {
         tryspawn()
     }
     log("done, ",
         rooms.length)
-
-
     render()
     angle_input = document.querySelector("#angle");
     angle_input.addEventListener("input", e => {
@@ -128,7 +128,7 @@ let offset = {
     y: 0
 }
 window.onwheel = e => {
-    /* scale = Math.Clamp(scale - e.deltaY * .0001, .4, 5) */
+    scale = Math.Clamp(scale - e.deltaY * .0001, .4, 5)
     log(scale)
     /* for (let r of rooms) {
         r.scale = scale;

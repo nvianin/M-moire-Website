@@ -17,7 +17,8 @@ class Room {
 
         this.points = [];
 
-        this.text = lorem;
+        this.updateText(lorem);
+        this.textNeedsUpdate = true;
         /* this.angle = Math.random() * Math.PI * 2; */
         this.angle = 0;
 
@@ -45,6 +46,10 @@ class Room {
     }
 
     draw(ctx) {
+        if (this.textNeedsUpdate) {
+            this.updateText(this.text)
+            this.textNeedsUpdate = false;
+        }
         ctx.translate(this.offset.x, this.offset.y)
         ctx.rotate(this.angle)
         ctx.beginPath()
@@ -71,17 +76,29 @@ class Room {
         ctx.fill()
         ctx.fillStyle = "black"
         ctx.font = "14px Helvetica"
-        let lines = this.getText(ctx);
         let lineHeight = 2;
-        for (let line of lines) {
+        for (let line of this.lines) {
             lineHeight += 20;
             ctx.fillText(line, this.x + 4, this.y + lineHeight);
         }
         ctx.resetTransform()
 
         for (let room of rooms) {
-            if (room.aabb(this)) {
+            if (room.aabb(this) && !this.fixed) {
                 this.color = "red"
+                if (this.y > canvas.height / 2) {
+                    this.y += Math.random();
+                } else {
+                    this.y -= Math.random();
+                }
+            } else if (!this.fixed) {
+                /* this.fixed = true */
+                this.fixed_counter = 0;
+            } else {
+                this.fixed_counter++
+                if (this.fixed_counter > 100) {
+                    this.fixed = false;
+                }
             }
         }
     }
@@ -97,6 +114,11 @@ class Room {
             }
         }
         return false;
+    }
+
+    updateText(text) {
+        this.text = text;
+        this.lines = this.getText(ctx);
     }
 
     getText(ctx) {
