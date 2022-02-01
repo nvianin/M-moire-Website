@@ -32,7 +32,7 @@ canvas {
 #angle {
   position: fixed;
   z-index: 100;
-  bottom: 0px;
+  bottom: 10px;
   left: 50%;
   width: 80%;
   transform: translate(-50%, 0);

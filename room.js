@@ -18,7 +18,8 @@ class Room {
         this.points = [];
 
         this.text = lorem;
-        this.angle = Math.random() * Math.PI * 2;
+        /* this.angle = Math.random() * Math.PI * 2; */
+        this.angle = 0;
 
 
         this.points.push({
@@ -77,13 +78,21 @@ class Room {
             ctx.fillText(line, this.x + 4, this.y + lineHeight);
         }
         ctx.resetTransform()
+
+        for (let room of rooms) {
+            if (room.aabb(this)) {
+                this.color = "red"
+            }
+        }
     }
 
     aabb(other) {
         if ((this.x > other.x && this.x < other.x + other.width) ||
             (this.x + this.width > other.x && this.x + this.width < other.x + other.width)) {
+            /* other.color = "maroon" */
             if ((this.y > other.y && this.y < other.y + other.height) ||
                 (this.y + this.height > other.y && this.y + this.height < other.y + other.height)) {
+                /* other.color = "green" */
                 return true;
             }
         }
