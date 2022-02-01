@@ -2,7 +2,10 @@ let log = console.log;
 Math.Clamp = (val, min, max) => {
     return Math.min(Math.max(val, min), max)
 }
-
+Math.DegToRad = (deg) => {
+    return deg * .0174533;
+}
+let angle_input;
 let canvas, ctx;
 let rooms = []
 let scale = 1;
@@ -48,7 +51,54 @@ window.onload = () => {
 
 
     render()
+    angle_input = document.querySelector("#angle");
+    angle_input.addEventListener("input", e => {
+        /* log(angle_input.value) */
+        document.angle = parseFloat(angle_input.value)
+        canvas.style.transform = "rotate(" + document.angle + "deg)" /* +" translate(-50%, -50%)" */
+    })
+
+    canvas.onpointerdown = e => {
+        canvas.style.cursor = "grabbing"
+        mousedown = true;
+        let m = rotateMouse()
+        startPos.x = m.x - offset.x;
+        startPos.y = m.y - offset.y;
+    }
+    canvas.onpointerup = e => {
+        let m = rotateMouse()
+        offset.x = m.x - startPos.x;
+        offset.y = m.y - startPos.y;
+        canvas.style.cursor = "grab"
+        mousedown = false;
+    }
+    canvas.onmousemove = canvas.ontouchmove = e => {
+        if (e.changedTouches) {
+            log(e.changedTouches[0])
+            mouseX = e.changedTouches[0].clientX;
+            mouseY = e.changedTouches[0].clientY;
+        } else {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        }
+
+        if (mousedown) {
+            let m = rotateMouse()
+            /* mouseX = rot_mouse.x
+            mouseY = rot_mouse.y */
+
+            for (let r of rooms) {
+                r.offset.x = m.x - startPos.x;
+                r.offset.y = m.y - startPos.y;
+            }
+            offset.x = m.x - startPos.x;
+            offset.y = m.y - startPos.y;
+        }
+    }
+    canvas.onpointer
 }
+let mouseX, mouseY
+mouseX = mouseY = 0;
 let render = () => {
     document.offset = offset;
     let toRemove = []
@@ -56,6 +106,12 @@ let render = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(render);
     /* ctx.translate(offset.x, offset.y); */
+    ctx.beginPath()
+    ctx.fillStyle = "red"
+    let m = rotateMouse()
+    ctx.arc(m.x, m.y, 100, 0, Math.PI * 2);
+    ctx.fill()
+
     ctx.scale(scale, scale);
     /* ctx.translate(-offset.x, -offset.y); */
     for (let i = 0; i < rooms.length; i++) {
@@ -71,31 +127,8 @@ let offset = {
     x: 0,
     y: 0
 }
-window.onpointerdown = e => {
-    canvas.style.cursor = "grabbing"
-    mousedown = true;
-    startPos.x = e.clientX - offset.x;
-    startPos.y = e.clientY - offset.y;
-}
-window.onpointerup = e => {
-    offset.x = e.clientX - startPos.x;
-    offset.y = e.clientY - startPos.y;
-    canvas.style.cursor = "grab"
-    mousedown = false;
-}
-window.onmousemove = e => {
-    if (mousedown) {
-        for (let r of rooms) {
-            r.offset.x = e.clientX - startPos.x;
-            r.offset.y = e.clientY - startPos.y;
-        }
-        offset.x = e.clientX - startPos.x;
-        offset.y = e.clientY - startPos.y;
-
-    }
-}
 window.onwheel = e => {
-    scale = Math.Clamp(scale - e.deltaY * .0001, .4, 5)
+    /* scale = Math.Clamp(scale - e.deltaY * .0001, .4, 5) */
     log(scale)
     /* for (let r of rooms) {
         r.scale = scale;
@@ -125,7 +158,24 @@ window.onkeydown = e => {
             direction.x -= 1;
             break;
     }
-    log(direction)
-    document.angle += direction.x * .04;
-    canvas.style.transform = "rotate(" + document.angle + "rad)" /* +" translate(-50%, -50%)" */
+    /* log(direction) */
+    document.angle = Math.Clamp(document.angle + direction.x * 2, -180, 180);
+    canvas.style.transform = "rotate(" + document.angle + "deg)" /* +" translate(-50%, -50%)" */
+    angle_input.value = document.angle;
+}
+
+function rotateVector(vec, angle) {
+    return {
+        x: Math.cos(angle) * vec.x - Math.sin(angle) * vec.y,
+        y: Math.sin(angle) * vec.x + Math.cos(angle) * vec.y
+    }
+}
+
+function rotateMouse() {
+    let vec = {
+        x: mouseX,
+        y: mouseY
+    }
+    /* return vec */
+    return rotateVector(vec, -Math.DegToRad(document.angle))
 }

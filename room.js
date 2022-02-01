@@ -114,7 +114,7 @@ class Room {
     }
 
     cull() {
-        /* return true; */
+        /* return strue; */
         let other = new Room(-offset.x, -offset.y, innerWidth * 1.5, innerHeight * 1.5)
         /* if (Math.abs((this.offset.x + this.offset.y) + (offset.x + offset.y)) < innerWidth * 2) {
             return true
@@ -124,6 +124,7 @@ class Room {
             ctx.stroke()
             return false
         } */
+        return true;
         return this.aabb(other);
     }
 }
