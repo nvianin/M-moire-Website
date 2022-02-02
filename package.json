@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "paper": "^0.12.15"
+    "2d-polygon-boolean": "^1.0.1",
+    "aabb": "^0.0.1",
+    "poisson-disk-sampling": "^2.2.2"
   }
 }

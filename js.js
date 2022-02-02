@@ -1,4 +1,5 @@
 let log = console.log;
+let polybool = document.polygonBoolean;
 Math.Clamp = (val, min, max) => {
     return Math.min(Math.max(val, min), max)
 }
@@ -8,17 +9,31 @@ Math.DegToRad = (deg) => {
 let angle_input;
 let canvas, ctx;
 let rooms = []
-let scale = 1;
+let scale = .2;
 document.angle = 0;
+
+let shape;
+let shapeready = false;
+
 let tryspawn = () => {
-    for (let i = 0; i < 50; i++) {
-        rooms.push(
-            new Room(
-                innerWidth * 3 * Math.random(),
-                innerHeight * 3 * Math.random(),
-                Math.random() * 500 + 250,
-                Math.random() * 300 + 100
-            ));
+    let p = new PoissonDiskSampling({
+        shape: [innerWidth * 3, innerHeight * 3],
+        minDistance: 500,
+        maxDistance: 600,
+        tries: 10
+    })
+    p = p.fill();
+    log(p)
+    for (let i = 0; i < p.length; i++) {
+        let r = new Room(
+            p[i][0],
+            p[i][1] * 1,
+            Math.random() * 200 + 250,
+            Math.random() * 400 + 200
+        );
+        r.offset.x = offset.x;
+        r.offset.y = offset.y;
+        rooms.push(r)
     }
     /* let toRemove = []
     for (let i = 0; i < rooms.length; i++) {
@@ -40,10 +55,9 @@ window.onload = () => {
     canvas = document.querySelector("canvas")
     ctx = canvas.getContext("2d");
     ctx.lineCap = "square"
-    canvas.width = window.innerWidth * (Math.PI / 2);
-    canvas.height = window.innerWidth * (Math.PI / 2);
-
-
+    let longest = innerWidth > innerHeight ? innerWidth : innerHeight;
+    canvas.width = longest * (Math.PI / 2);
+    canvas.height = longest * (Math.PI / 2);
 
     while (rooms.length < 11) {
         tryspawn()
@@ -95,28 +109,62 @@ window.onload = () => {
             offset.y = m.y - startPos.y;
         }
     }
-    canvas.onpointer
 }
 let mouseX, mouseY
+let pushdone = false;
+let pulldone = false;
 mouseX = mouseY = 0;
 let render = () => {
-    document.offset = offset;
-    let toRemove = []
+    if (prevPushFails == pushfails && !pushdone) {
+        log("vertical push done")
+        pushdone = true;
+    } else if (prevpullfails == pullfails && !pulldone && pushdone) {
+        log(prevpullfails, pullfails)
+        log("vertical pull done");
+        pulldone = true;
+        solidifyWalls()
+    }
+    prevPushFails = pushfails;
+    prevpullfails = pullfails;
+
     ctx.fillStyle = "white"
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(render);
+    if (shapeready) {
+        ctx.strokeStyle = "black"
+        for (let poly of shape) {
+            ctx.beginPath();
+            for (let point of poly) {
+                ctx.lineTo(point[0], point[1]);
+            }
+            ctx.stroke()
+        }
+    } else {
+        log("preparing")
+        for (let i = 0; i < rooms.length; i++) {
+            rooms[i].scale = scale;
+            if (rooms[i].cull()) rooms[i].draw(ctx);
+        }
+    }
+
+    document.offset = offset;
+    let toRemove = []
     /* ctx.translate(offset.x, offset.y); */
-    ctx.beginPath()
+    /* ctx.beginPath()
     ctx.fillStyle = "red"
     let m = rotateMouse()
     ctx.arc(m.x, m.y, 100, 0, Math.PI * 2);
-    ctx.fill()
-
-    ctx.scale(scale, scale);
+    ctx.fill() */
+    // debug draw
+    /* ctx.scale(scale, scale); */
     /* ctx.translate(-offset.x, -offset.y); */
-    for (let i = 0; i < rooms.length; i++) {
-        if (rooms[i].cull()) rooms[i].draw(ctx);
+    if (true) {
+        ctx.beginPath()
+        ctx.fillStyle = "green"
+        ctx.arc(offset.x, offset.yo, 100, 0, Math.PI * 2)
+        ctx.fill()
     }
+
 }
 let mousedown = false;
 let startPos = {
@@ -124,19 +172,20 @@ let startPos = {
     y: 0
 }
 let offset = {
-    x: 0,
-    y: 0
+    x: 500,
+    y: 750
 }
 window.onwheel = e => {
-    scale = Math.Clamp(scale - e.deltaY * .0001, .4, 5)
+    scale = Math.Clamp(scale - e.deltaY * .001, .15, 5)
     log(scale)
     /* for (let r of rooms) {
         r.scale = scale;
     } */
 }
 window.onresize = () => {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    let longest = innerWidth > innerHeight ? innerWidth : innerHeight;
+    canvas.width = longest * (Math.PI / 2);
+    canvas.height = longest * (Math.PI / 2);
 }
 window.onkeydown = e => {
     let direction = {
@@ -178,4 +227,30 @@ function rotateMouse() {
     }
     /* return vec */
     return rotateVector(vec, -Math.DegToRad(document.angle))
+}
+
+function loadText() {
+    fetch("./text.md").then(data => {
+        data.text().then(data => {
+            return data;
+        })
+    })
+}
+
+function solidifyWalls() {
+    let regions = []
+    for (let r of rooms) {
+        regions.push(r.gatherPoints())
+    }
+    log(regions)
+    let result = PolyBool.union({
+        regions: regions,
+        inverted: false
+    }, {
+        regions: regions,
+        inverted: false
+    })
+    log(result)
+    shape = result.regions;
+    shapeready = true;
 }
