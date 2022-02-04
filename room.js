@@ -92,47 +92,48 @@ class Room {
         ctx.resetTransform()
 
         /* return false */
-        for (let room of rooms) {
-            this.aabb = new AABB([this.x, this.y], [this.x + this.width, this.y + this.height])
-            if (room != this && room.aabb.overlaps(this.aabb)) {
-                if (!pushdone) {
-                    pushfails++;
-                    /* prevPushFails = pushfails; */
-                    let speed = Math.abs(this.y - canvas.height / 2) * .02 + .01;
-                    if (this.y > canvas.height / 2) {
-                        this.y += Math.random() * speed;
+        if (!shapeready) {
+            for (let room of rooms) {
+                this.aabb = new AABB([this.x, this.y], [this.x + this.width, this.y + this.height])
+                if (room != this && room.aabb.overlaps(this.aabb)) {
+                    if (!pushdone) {
+                        pushfails++;
+                        /* prevPushFails = pushfails; */
+                        let speed = Math.abs(this.y - canvas.height / 2) * .02 + .01;
+                        if (this.y > canvas.height / 2) {
+                            this.y += Math.random() * speed;
+                        } else {
+                            this.y -= Math.random() * speed;
+                        }
+                        if (this.x > canvas.width / 2) {
+                            this.x += Math.random() * speed;
+                        } else {
+                            this.x -= Math.random() * speed;
+                        }
                     } else {
-                        this.y -= Math.random() * speed;
+                        this.color = "red"
+                        this.fixed = true;
                     }
-                    if (this.x > canvas.width / 2) {
-                        this.x += Math.random() * speed;
-                    } else {
-                        this.x -= Math.random() * speed;
-                    }
-                } else {
-                    this.color = "red"
-                    this.fixed = true;
-                }
 
-            } else {
-                if (pushdone && !this.fixed) {
-                    pullfails++;
-                    let speed = Math.abs(canvas.height / 2 - this.y) * .02 + .01;
-                    if (this.y > canvas.height / 2) {
-                        this.y -= Math.random() * speed;
-                    } else {
-                        this.y += Math.random() * speed;
-                    }
-                    if (this.x > canvas.width / 2) {
-                        this.x -= Math.random() * speed;
-                    } else {
-                        this.x += Math.random() * speed;
+                } else {
+                    if (pushdone && !this.fixed) {
+                        pullfails++;
+                        let speed = Math.abs(canvas.height / 2 - this.y) * .02 + .01;
+                        if (this.y > canvas.height / 2) {
+                            this.y -= Math.random() * speed;
+                        } else {
+                            this.y += Math.random() * speed;
+                        }
+                        if (this.x > canvas.width / 2) {
+                            this.x -= Math.random() * speed;
+                        } else {
+                            this.x += Math.random() * speed;
+                        }
                     }
                 }
             }
         }
     }
-
     // aabb(other) {
     //     if ((this.x > other.x && this.x < other.x + other.width) ||
     //         (this.x + this.width > other.x && this.x + this.width < other.x + other.width)) {

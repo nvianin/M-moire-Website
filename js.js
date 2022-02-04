@@ -154,13 +154,13 @@ let render = () => {
             ctx.fill()
         }
         /* } */
-    } else {
-        log("preparing")
-        for (let i = 0; i < rooms.length; i++) {
-            rooms[i].scale = scale;
-            if (rooms[i].cull()) rooms[i].draw(ctx);
-        }
+    } /* else { */
+    log("preparing")
+    for (let i = 0; i < rooms.length; i++) {
+        rooms[i].scale = scale;
+        if (rooms[i].cull()) rooms[i].draw(ctx);
     }
+    /* } */
 
     document.offset = offset;
     let toRemove = []
@@ -258,7 +258,12 @@ function walls() {
     let roompoints = []
 
     for (let r of rooms) {
-        roompoints.push(r.gatherPoints())
+        r = r.gatherPoints();
+        regions = PolyBool.union({
+            regions: [r]
+        }, {
+            regions: regions
+        }).regions
     }
 
     regions = (PolyBool.union({
@@ -268,8 +273,8 @@ function walls() {
     }).regions)
     log(regions)
 
-    shape = regions;
     shapeready = true;
+    shape = regions;
 }
 
 
