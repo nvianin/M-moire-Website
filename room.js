@@ -98,7 +98,7 @@ class Room {
                 if (!pushdone) {
                     pushfails++;
                     /* prevPushFails = pushfails; */
-                    let speed = Math.abs(this.y - canvas.height / 2) * .1 + .1;
+                    let speed = Math.abs(this.y - canvas.height / 2) * .02 + .01;
                     if (this.y > canvas.height / 2) {
                         this.y += Math.random() * speed;
                     } else {
@@ -117,7 +117,7 @@ class Room {
             } else {
                 if (pushdone && !this.fixed) {
                     pullfails++;
-                    let speed = Math.abs(canvas.height / 2 - this.y) * .001 + .1;
+                    let speed = Math.abs(canvas.height / 2 - this.y) * .02 + .01;
                     if (this.y > canvas.height / 2) {
                         this.y -= Math.random() * speed;
                     } else {
@@ -195,7 +195,7 @@ class Room {
     gatherPoints() {
         let points = []
         for (let p of this.points) {
-            points.push([Math.round(p.x), Math.round(p.y)]);
+            points.push([p.x + this.x, p.y + this.y]);
         }
         /* points.push(0) */
         /* log(points) */

@@ -18,7 +18,7 @@ let shapeready = false;
 let tryspawn = () => {
     let p = new PoissonDiskSampling({
         shape: [innerWidth * 3, innerHeight * 3],
-        minDistance: 500,
+        minDistance: 600,
         maxDistance: 600,
         tries: 10
     })
@@ -118,11 +118,15 @@ let render = () => {
     if (prevPushFails == pushfails && !pushdone) {
         log("vertical push done")
         pushdone = true;
-    } else if (prevpullfails == pullfails && !pulldone && pushdone) {
+    } else if ((prevpullfails == pullfails || pullfails > 3000) && !pulldone && pushdone) {
         log(prevpullfails, pullfails)
         log("vertical pull done");
         pulldone = true;
-        solidifyWalls()
+        /* solidifyWalls() */
+        walls()
+        /* dowallsbutitworks(); */
+    } else if (!pulldone || !pushdone) {
+        log(pushfails, pullfails)
     }
     prevPushFails = pushfails;
     prevpullfails = pullfails;
@@ -132,13 +136,24 @@ let render = () => {
     requestAnimationFrame(render);
     if (shapeready) {
         ctx.strokeStyle = "black"
+        /* log(shape) */
+        /* for (let region of shape) { */
         for (let poly of shape) {
+            /* log(poly) */
+            /* ctx.strokeStyle = '#' + (Math.random().toString(16) + '00000').slice(2, 8) */
             ctx.beginPath();
+            ctx.moveTo((poly[0][0] + offset.x) * scale, (poly[0][1] + offset.y) * scale)
             for (let point of poly) {
-                ctx.lineTo(point[0], point[1]);
+                /* log(point) */
+                ctx.lineTo((point[0] + offset.x) * scale, (point[1] + offset.y) * scale);
             }
+            ctx.lineTo((poly[0][0] + offset.x) * scale, (poly[0][1] + offset.y) * scale)
+            ctx.closePath()
             ctx.stroke()
+            ctx.fillStyle = "red"
+            ctx.fill()
         }
+        /* } */
     } else {
         log("preparing")
         for (let i = 0; i < rooms.length; i++) {
@@ -150,11 +165,12 @@ let render = () => {
     document.offset = offset;
     let toRemove = []
     /* ctx.translate(offset.x, offset.y); */
-    /* ctx.beginPath()
+    ctx.beginPath()
     ctx.fillStyle = "red"
     let m = rotateMouse()
+    /* log(m) */
     ctx.arc(m.x, m.y, 100, 0, Math.PI * 2);
-    ctx.fill() */
+    ctx.fill()
     // debug draw
     /* ctx.scale(scale, scale); */
     /* ctx.translate(-offset.x, -offset.y); */
@@ -172,8 +188,8 @@ let startPos = {
     y: 0
 }
 let offset = {
-    x: 500,
-    y: 750
+    x: innerWidth / 2,
+    y: 700
 }
 window.onwheel = e => {
     scale = Math.Clamp(scale - e.deltaY * .001, .15, 5)
@@ -237,20 +253,117 @@ function loadText() {
     })
 }
 
+function walls() {
+    let regions = []
+    let roompoints = []
+
+    for (let r of rooms) {
+        roompoints.push(r.gatherPoints())
+    }
+
+    regions = (PolyBool.union({
+        regions: roompoints
+    }, {
+        regions: regions
+    }).regions)
+    log(regions)
+
+    shape = regions;
+    shapeready = true;
+}
+
+
 function solidifyWalls() {
     let regions = []
-    for (let r of rooms) {
-        regions.push(r.gatherPoints())
+    let result = []
+    log(rooms.map(r => {
+        r.gatherPoints()
+    }))
+    regions = fuse(
+        rooms.map(r =>
+            r.gatherPoints()
+        ),
+        rooms.map(r =>
+            r.gatherPoints()
+        )
+    )
+    /* for (let r of rooms) {
+        let room = []
+        for (let r2 of rooms) {
+            let s = PolyBool.union({
+                regions: [r2.gatherPoints()],
+                inverted: false
+            }, {
+                regions: [r.gatherPoints()],
+                inverted: false
+            }).regions[0]
+            if (s.length > 4) room.push(s);
+        }
+        regions.push(room)
+    } */
+    for (let region of regions) {
+        /* log(region) */
+        result = PolyBool.union({
+            regions: result,
+            inverted: false
+        }, {
+            regions: region,
+            inverted: false
+        }).regions
     }
+    result = regions
+
+
+    for (let r of result) {
+        log(r);
+    }
+
     log(regions)
-    let result = PolyBool.union({
-        regions: regions,
-        inverted: false
-    }, {
-        regions: regions,
-        inverted: false
-    })
     log(result)
-    shape = result.regions;
+    shape = result;
+    shapeready = true;
+}
+
+function fuse(a, b) {
+    let regions = []
+    let fails = 0;
+    for (let a1 of a) {
+        let room = [a1]
+        for (let b1 of b) {
+            let s = PolyBool.union({
+                regions: [a1],
+                inverted: false
+            }, {
+                regions: [b1],
+                inverted: false
+            }).regions[0]
+            if (s.length > 4) {
+                room.push(s);
+                fails++;
+            }
+        }
+        regions.push(room)
+    }
+    log("regions:", regions)
+    return fails > 0 ? fuse(regions, b) : regions;
+}
+
+function dowallsbutitworks() {
+    let result = [rooms[0].gatherPoints()]
+    for (let r of rooms) {
+        result.push(PolyBool.union({
+                regions: [r.gatherPoints()],
+                inverted: false
+            }, {
+                regions: result,
+                inverted: false
+            }
+
+        ).regions)
+    }
+
+    log(result)
+
+    shape = result;
     shapeready = true;
 }
