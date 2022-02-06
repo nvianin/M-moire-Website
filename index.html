@@ -8,6 +8,8 @@
     <title>Mémoire Nathanaël Vianin</title>
     <link rel="stylesheet" href="style.css">
     <script src="./node_modules/aabb/index.js"></script>
+    <script src="noise.js"></script>
+    <script src="pip.js"></script>i
     <script src="polybool.js"></script>
     <script src="poisson-disk-sampling.min.js"></script>
     <script src=" room.js"></script>
@@ -15,11 +17,15 @@
 </head>
 
 <body>
+    <div id="paper"></div>
     <div id="bg"></div>
     <input type="range" id="angle" min="-180" max="180" value="0" step=".1">
     <div id="canvas-container">
         <canvas></canvas>
     </div>
+
+    <!-- textures -->
+    <img src="./hatching-01.png" id="hatching" alt="">
 </body>
 
 </html>

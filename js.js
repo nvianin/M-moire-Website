@@ -12,13 +12,20 @@ let rooms = []
 let scale = .2;
 document.angle = 0;
 
+noise.seed(Math.random())
+
+let hatching;
+
 let shape;
 let shapeready = false;
+
+let paper;
+let paperSize = 800;
 
 let tryspawn = () => {
     let p = new PoissonDiskSampling({
         shape: [innerWidth * 3, innerHeight * 3],
-        minDistance: 600,
+        minDistance: 300,
         maxDistance: 600,
         tries: 10
     })
@@ -50,14 +57,24 @@ let tryspawn = () => {
         }
     } */
 }
+let getLongest = () => {
+    return innerWidth > innerHeight ? innerWidth : innerHeight;
+}
+let longest = getLongest()
 
 window.onload = () => {
     canvas = document.querySelector("canvas")
     ctx = canvas.getContext("2d");
     ctx.lineCap = "square"
-    let longest = innerWidth > innerHeight ? innerWidth : innerHeight;
+    longest = getLongest();
     canvas.width = longest * (Math.PI / 2);
     canvas.height = longest * (Math.PI / 2);
+
+    hatching = ctx.createPattern(document.querySelector("#hatching"), "repeat")
+    paper = document.querySelector("#paper")
+    paper.style.backgroundPosition = offset.x + "px " + offset.y + "px"
+    paper.style.backgroundOrigin = (offset.x + innerWidth / 2) + "px " + (offset.y + innerHeight / 2) + "px"
+    paper.style.backgroundSize = paperSize * scale + "px"
 
     while (rooms.length < 11) {
         tryspawn()
@@ -92,8 +109,8 @@ window.onload = () => {
             mouseX = e.changedTouches[0].clientX;
             mouseY = e.changedTouches[0].clientY;
         } else {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+            mouseX = e.layerX;
+            mouseY = e.layerY;
         }
 
         if (mousedown) {
@@ -108,6 +125,11 @@ window.onload = () => {
             offset.x = m.x - startPos.x;
             offset.y = m.y - startPos.y;
         }
+
+        paper.style.backgroundPosition = offset.x + "px " + offset.y + "px"
+        paper.style.backgroundOrigin = (offset.x) + "px " + (offset.y) + "px"
+        /* log(paper.style.backgroundPosition) */
+
     }
 }
 let mouseX, mouseY
@@ -115,7 +137,7 @@ let pushdone = false;
 let pulldone = false;
 mouseX = mouseY = 0;
 let render = () => {
-    if (prevPushFails == pushfails && !pushdone) {
+    if ((prevPushFails == pushfails || pushfails > 2500) && !pushdone) {
         log("vertical push done")
         pushdone = true;
     } else if ((prevpullfails == pullfails || pullfails > 3000) && !pulldone && pushdone) {
@@ -134,31 +156,41 @@ let render = () => {
     ctx.fillStyle = "white"
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(render);
+    let cursorColor = "red"
     if (shapeready) {
         ctx.strokeStyle = "black"
         /* log(shape) */
         /* for (let region of shape) { */
+        ctx.translate(offset.x, offset.y)
+        /* ctx.rotate(angle) */
+        ctx.lineWidth = 54 * scale;
         for (let poly of shape) {
             /* log(poly) */
             /* ctx.strokeStyle = '#' + (Math.random().toString(16) + '00000').slice(2, 8) */
             ctx.beginPath();
-            ctx.moveTo((poly[0][0] + offset.x) * scale, (poly[0][1] + offset.y) * scale)
+            ctx.moveTo((poly[0][0]) * scale, (poly[0][1]) * scale)
             for (let point of poly) {
                 /* log(point) */
-                ctx.lineTo((point[0] + offset.x) * scale, (point[1] + offset.y) * scale);
+                ctx.lineTo((point[0]) * scale, (point[1]) * scale);
             }
-            ctx.lineTo((poly[0][0] + offset.x) * scale, (poly[0][1] + offset.y) * scale)
+            ctx.lineTo((poly[0][0]) * scale, (poly[0][1]) * scale)
             ctx.closePath()
+            ctx.strokeStyle = hatching
             ctx.stroke()
-            ctx.fillStyle = "red"
+            ctx.fillStyle = "white"
             ctx.fill()
+            let m = getWorldMouse()
+            if (pointInPolygon([m.x, m.y], poly)) {
+                cursorColor = "lime"
+                log(m.x, m.y)
+            }
         }
+        ctx.resetTransform()
         /* } */
     } /* else { */
-    log("preparing")
     for (let i = 0; i < rooms.length; i++) {
-        rooms[i].scale = scale;
-        if (rooms[i].cull()) rooms[i].draw(ctx);
+        /* rooms[i].scale = scale;
+        if (rooms[i].cull()) rooms[i].draw(ctx); */
     }
     /* } */
 
@@ -166,18 +198,27 @@ let render = () => {
     let toRemove = []
     /* ctx.translate(offset.x, offset.y); */
     ctx.beginPath()
-    ctx.fillStyle = "red"
+    ctx.fillStyle = cursorColor
     let m = rotateMouse()
     /* log(m) */
-    ctx.arc(m.x, m.y, 100, 0, Math.PI * 2);
+    ctx.arc(
+        m.x,
+        m.y,
+        20, 0, Math.PI * 2
+    );
+    /* ctx.arc(
+        m.x + (Math.PI / 2 * longest - longest) / 2,
+        m.y + (Math.PI / 2 * longest - longest) / 2,
+        100, 0, Math.PI * 2
+    ); */
     ctx.fill()
     // debug draw
     /* ctx.scale(scale, scale); */
     /* ctx.translate(-offset.x, -offset.y); */
     if (true) {
         ctx.beginPath()
-        ctx.fillStyle = "green"
-        ctx.arc(offset.x, offset.yo, 100, 0, Math.PI * 2)
+        ctx.fillStyle = "lime"
+        ctx.arc(offset.x, offset.y, 10, 0, Math.PI * 2)
         ctx.fill()
     }
 
@@ -191,15 +232,18 @@ let offset = {
     x: innerWidth / 2,
     y: 700
 }
+/* offset.x = 0;
+offset.y = 0; */
 window.onwheel = e => {
     scale = Math.Clamp(scale - e.deltaY * .001, .15, 5)
     log(scale)
+    paper.style.backgroundSize = paperSize * scale + "px";
     /* for (let r of rooms) {
         r.scale = scale;
     } */
 }
 window.onresize = () => {
-    let longest = innerWidth > innerHeight ? innerWidth : innerHeight;
+    longest = innerWidth > innerHeight ? innerWidth : innerHeight;
     canvas.width = longest * (Math.PI / 2);
     canvas.height = longest * (Math.PI / 2);
 }
@@ -245,6 +289,14 @@ function rotateMouse() {
     return rotateVector(vec, -Math.DegToRad(document.angle))
 }
 
+function getWorldMouse() {
+    let m = rotateMouse();
+
+
+
+    return m;
+}
+
 function loadText() {
     fetch("./text.md").then(data => {
         data.text().then(data => {
@@ -273,6 +325,14 @@ function walls() {
     }).regions)
     log(regions)
 
+
+    for (poly of regions) {
+        for (point of poly) {
+            let sc = .0004;
+            point[0] += noise.simplex2(point[0] * sc * .5, point[1] * sc * .5) * 30
+            point[1] += noise.simplex2(point[1] * sc, point[0] * sc) * 30
+        }
+    }
     shapeready = true;
     shape = regions;
 }
@@ -371,4 +431,16 @@ function dowallsbutitworks() {
 
     shape = result;
     shapeready = true;
+}
+
+function transformPoly(poly, offset, scale, angle = 0) {
+    let new_poly = []
+    for (let p of poly) {
+        let point = {
+            x: (p.x + offset.x) * scale,
+            y: (p.y + offset.y) * scale
+        }
+        new_poly.push(point)
+    }
+    return new_poly;
 }

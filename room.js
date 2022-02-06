@@ -25,8 +25,8 @@ class Room {
 
         this.updateText(lorem);
         this.textNeedsUpdate = true;
-        /* this.angle = Math.random() * Math.PI * 2; */
-        this.angle = 0;
+        this.angle = Math.random() * Math.PI * 2;
+        /* this.angle = 0; */
 
         this.aabb = new AABB([this.x, this.y], [this.x + this.width, this.y + this.width])
 
@@ -59,10 +59,10 @@ class Room {
             this.textNeedsUpdate = false;
         }
         ctx.translate(this.offset.x, this.offset.y)
-        ctx.rotate(this.angle)
-        ctx.beginPath()
+        /* ctx.rotate(this.angle) */
+        /* ctx.beginPath()
         ctx.strokeStyle = this.color;
-        ctx.fillStyle = "white"
+        ctx.fillStyle = "transparent"
         ctx.moveTo(
             (this.points[0].x + this.x) * this.scale,
             (this.points[0].y + this.y) * this.scale
@@ -78,10 +78,10 @@ class Room {
             (this.points[0].x + this.x) * this.scale,
             (this.points[0].y + this.y) * this.scale
         );
-        ctx.closePath()
-        ctx.lineWidth = 12 * this.scale;
+        ctx.closePath() */
+        /* ctx.lineWidth = 12 * this.scale;
         ctx.stroke();
-        ctx.fill()
+        ctx.fill() */
         ctx.fillStyle = "black"
         ctx.font = 14 * this.scale + "px Helvetica"
         let lineHeight = 2;
@@ -95,7 +95,13 @@ class Room {
         if (!shapeready) {
             for (let room of rooms) {
                 this.aabb = new AABB([this.x, this.y], [this.x + this.width, this.y + this.height])
+                let distance = {
+                    x: 0,
+                    y: 0
+                }
                 if (room != this && room.aabb.overlaps(this.aabb)) {
+                    distance.x += room.x - this.x;
+                    distance.y += room.y - this.y;
                     if (!pushdone) {
                         pushfails++;
                         /* prevPushFails = pushfails; */
@@ -113,6 +119,10 @@ class Room {
                     } else {
                         this.color = "red"
                         this.fixed = true;
+                        this.width += 40
+                        this.height += 40
+                        this.x -= 20;
+                        this.y -= 20
                     }
 
                 } else {
@@ -131,6 +141,8 @@ class Room {
                         }
                     }
                 }
+                room.x += distance.x * .1;
+                room.y += distance.y * .1
             }
         }
     }
@@ -178,6 +190,7 @@ class Room {
     cull() {
         /* return strue; */
         let other = new Room(-offset.x, -offset.y, innerWidth * 1.5, innerHeight * 1.5)
+        let screen = new AABB([0 + offset.x, 0 + offset.y], [innerWidth + offset.x, innerHeight + offset.y])
         /* if (Math.abs((this.offset.x + this.offset.y) + (offset.x + offset.y)) < innerWidth * 2) {
             return true
         } else {
@@ -186,6 +199,7 @@ class Room {
             ctx.stroke()
             return false
         } */
+        /* return screen.overlaps(this.aabb) */
         return true;
         return this.aabb(other);
     }
