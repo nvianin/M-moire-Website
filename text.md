@@ -2,7 +2,7 @@
 
 Yay, no errors, warnings, or alerts!
 
-Conversion time: 0.994 seconds.
+Conversion time: 0.392 seconds.
 
 
 Using this Markdown file:
@@ -15,22 +15,11 @@ Using this Markdown file:
 Conversion notes:
 
 * Docs to Markdown version 1.0β33
-* Tue Feb 01 2022 09:37:24 GMT-0800 (PST)
+* Sun Feb 06 2022 08:29:57 GMT-0800 (PST)
 * Source doc: Mémoire | Modding: Creation through Play, Homo Ludens and The Basis for a Healthy Metaverse
+* This is a partial selection. Check to make sure intra-doc links work.
 ----->
 
-
-**Modding: Creation through Play, Homo Ludens and The Basis for a Healthy Metaverse**
-
-**Keywords**: modding, modding culture, sharing culture, content creation, open-source, online culture, memes, game development, games, ludology, homo ludens, new babylon
-
-_Mods _are user-made modifications to video games that are generally made available for free on hosting platforms, such as _nexusmods.com_. Community-made new environments, characters, objects and storylines, tools to create more mods, or to install and make them mesh well with one another… Modding has become an inevitable part of modern game culture. To hack and personalise one's gaming experience is an activity at the edge between game-making and game-playing, the ultimate love-letter to the medium by those who don't have the means to develop their own intricate gaming experiences, but use existing games as platforms to propel their own ideas.
-
-In this memoir, I want to explore what it means that people build their own game using another game as a platform, specifically using Garry’s Mod as a case study. Garry’s Mod is a mod of Valve’s 2004 hit game Half-Life 2, which exposes the internal resources of the engine to the users, allowing extreme customization of the game experience. Maps, characters, entities, game systems and vehicles are customizable, creatable and downloadable by everyone, and in-game tools permit creation within the technical possibilities of the base game, such as posing characters, building contraptions with the game’s objects and enhancing them with wheels, thrusters, cameras, electronics, and even programming using mods.
-
-To mod is also to blur the line between content creation and consumption, as games become much more of a community endeavour than a consumption product. As players become designers, we start to see a situation resembling Constant Nieuwenhuys’ dream for Homo Ludens, the Playing Man, in his New Babylon. Constant proposes a situationist, post-scarcity, world-spanning city, a baseline structure that would accommodate a poetic way of living through creativity and play, a way for Homo Faber to transform into Homo Ludens, Man making art with life. This theme is echoed in video games that allow a lot of player freedom and creativity, such as Garry’s Mod, where a common base platform is elaborated on by all to create situations, intrigues, other games and universes.
-
-I will examine the similarities in Nieuwenhuys’ proposition and Garry’s Mod, trying to draw conclusions about the future of shared, community-built worlds, such as the fabled Metaverse, how they fit Nieuwenhuys’ idea of Homo Ludens and how they could learn from modding communities of the past twenty years and Nieuwenhuys’ work in urban planning. A universal virtual world could house utopia, dystopia, a combination of the two, but will most probably become the successor of what once was the American Mall. As citizens of the world, we should have a say in the politics and physicalities of this common new New World, and if we look at what Mark Zuckerberg’s vision of a Metaverse suggests, We the Techno-Serfs would be better off building our own.
 
 **Introduction** _4 pages_
 
@@ -112,7 +101,7 @@ We should be wary of what Meta and other centralised virtual world endeavours wa
 
 This form of monetization has proven its efficiency in the world of video games, with some so-called _free-to-play_ games being rebranded by the community as _pay-to-win_. This can be seen as part of a larger shift in the software industry, where the paradigm now is _software-as-a-service_.
 
-Now, take Constant’s ideal of a New Babylon for Homo Ludens. It could easily be replicated except for the post-scarcity part: humans could let the real world totally fall behind - only engaging with it as one would a coal mine, as brilliantly put by comedian Bo Burnham, and concentrate on their “much more real” digital existences since those are less limited by the oppressions of capitalism and other real world tragedies.
+Now, take Constant’s ideal of a New Babylon for Homo Ludens. It could easily be replicated except for the post-scarcity part: humans could let the real world totally fall behind - only engaging with it as one would a coal mine, as brilliantly put by comedian Bo Burnham, and concentrate on their “much more real” digital existences since those are less limited by the oppressions of capitalism and other real world tragedies. Also, since now people are living and consuming (in) a digital world filled with virtual things to use explore and do, they don’t need as much material goods that they would have wanted otherwise, making it possible to take material value out of the individual’s life to replace it with digital value, which is much easier to control and produce.
 
 
     Homo Ludens & Homo Faber
@@ -180,31 +169,3 @@ Mods being historically based in a sharing economy, it came out as weird when Be
         Garry’s Mod, a proto-metaverse
 
 Garry’s mod has been, like others, an early example of a metaverse. In this document, I have tried to show that whatever this game has been, the good and the bad, could be considered a better metaverse than whatever Meta is cooking up. What we need is platforms with a similar reach, and openness, to Garry’s mod, enabling users to create, share, and live in their dreams. We mustn’t limit that which is potentially infinite by the monetary values of our old world of dust and blood, we should propel it to become a forum of joy and thought and culture and expression, and ultimately a New Babylon where humanity can exist as Homo Ludens.
-
-
-
-**Bibliographie**
-
-**Homo Ludens, **Johan Huizinga, 1938
-
-**Constant's New Babylon: The Hyper-Architecture of Desire**,Mark Wigley, 1998
-
-**[Modding as a basis for developing game systems, Walt Scacchi, 2011](https://www.researchgate.net/publication/228743734_Modding_as_a_basis_for_developing_game_systems)**
-
-**[User Created Content, Raph Koster, 2006](https://www.raphkoster.com/2006/06/20/user-created-content/)**
-
-**Players Unleashed! Modding The Sims and the Culture of Gaming**, Tanja Sihvonen, 2011
-
-**A Game Made From Other Games: Actions and Entities in Garry’s Mod**, Peter Nelson, 2017
-
-**View of computer game mods, modders, modding, and the mod scene**, first monday, 2010
-
-**Fooling the user? Modding in the video game industry**, Merlin Münch, 2013
-
-**Private Server, Lonely World**, Dante Pettapiece, 2021
-
-—-----------------------------
-
-Rester bien sur le sujet Homo Faber -> Homo Ludens
-
-Amener concept espace 3d, pas le réaliser

@@ -6,6 +6,12 @@ Math.Clamp = (val, min, max) => {
 Math.DegToRad = (deg) => {
     return deg * .0174533;
 }
+
+function distance(x, y, x1, y1) {
+    var dx = x1 - x;
+    var dy = y1 - y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
 Math.HALF_PI = Math.PI / 2;
 Math.TWO_PI = Math.PI * 2;
 
@@ -14,6 +20,7 @@ let canvas, ctx;
 let rooms = []
 let scale = .2;
 document.angle = 0;
+let debug = true;
 
 noise.seed(Math.random())
 
@@ -21,6 +28,12 @@ let hatching;
 
 let shape;
 let shapeready = false;
+let validPoints = []
+let validPointsFound = false;
+
+let text;
+let textLoaded = false;
+loadText()
 
 let paper;
 let paperSize = 800;
@@ -109,11 +122,15 @@ window.onload = () => {
     canvas.onmousemove = canvas.ontouchmove = e => {
         if (e.changedTouches) {
             log(e.changedTouches[0])
-            mouseX = e.changedTouches[0].clientX;
-            mouseY = e.changedTouches[0].clientY;
+            mouseX = e.changedTouches[0].layerX;
+            mouseY = e.changedTouches[0].layerY;
+            clientMouseX = e.changedTouches[0].clientX;
+            clientMouseY = e.changedTouches[0].clientY;
         } else {
             mouseX = e.layerX;
             mouseY = e.layerY;
+            clientMouseX = e.clientX;
+            clientMouseY = e.clientY;
         }
 
         if (mousedown) {
@@ -136,10 +153,14 @@ window.onload = () => {
     }
 }
 let mouseX, mouseY
+let clientMouseX, clientMouseY
 let pushdone = false;
 let pulldone = false;
 mouseX = mouseY = 0;
+clientMouseX = clientMouseY = 0
+let frame = 0;
 let render = () => {
+    frame++
     if ((prevPushFails == pushfails || pushfails > 2500) && !pushdone) {
         log("vertical push done")
         pushdone = true;
@@ -160,7 +181,7 @@ let render = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     requestAnimationFrame(render);
     let cursorColor = "red"
-    if (shapeready) {
+    if (shapeready && textLoaded) {
         ctx.strokeStyle = "black"
         /* log(shape) */
         /* for (let region of shape) { */
@@ -183,14 +204,33 @@ let render = () => {
             ctx.fillStyle = "white"
             ctx.fill()
             let m = getWorldMouse()
-            if (pointInPolygon([m.x, m.y], poly)) {
-                cursorColor = "lime"
-                log(m.x, m.y)
-            }
         }
         ctx.resetTransform()
+        if (validPointsFound) {
+            displayValidPoints()
+            printText()
+        } else {
+            testCollisions(ctx)
+        }
 
-        testCollisions(ctx)
+        if (debug) {
+            ctx.beginPath()
+            let m = rotateMouse()
+            m.x -= offset.x;
+            m.y -= offset.y;
+            m.x /= scale;
+            m.y /= scale;
+            /* log(m) */
+            ctx.fillStyle = isLocationValid(m.x, m.y) ? "lime" : "red"
+            /* log(m) */
+            m = rotateMouse()
+            ctx.arc(
+                m.x,
+                m.y,
+                20, 0, Math.PI * 2
+            );
+            ctx.fill()
+        }
         /* } */
     } /* else { */
     for (let i = 0; i < rooms.length; i++) {
@@ -202,16 +242,6 @@ let render = () => {
     document.offset = offset;
     let toRemove = []
     /* ctx.translate(offset.x, offset.y); */
-    ctx.beginPath()
-    ctx.fillStyle = cursorColor
-    let m = rotateMouse()
-    /* log(m) */
-    ctx.arc(
-        m.x,
-        m.y,
-        20, 0, Math.PI * 2
-    );
-    ctx.fill()
 
 
     /* ctx.arc(
@@ -222,7 +252,7 @@ let render = () => {
     // debug draw
     /* ctx.scale(scale, scale); */
     /* ctx.translate(-offset.x, -offset.y); */
-    if (true) {
+    if (debug) {
         ctx.beginPath()
         ctx.fillStyle = "lime"
         ctx.arc(offset.x, offset.y, 10, 0, Math.PI * 2)
@@ -313,9 +343,9 @@ function getWorldMouse() {
     m = getWorldPos(m.x, m.y);
     m.x -= (longest * Math.HALF_PI - innerWidth) / 2 + offset.x
     m.y -= (longest * Math.HALF_PI - innerHeight) / 2 + offset.y
-    if (Math.random() < .01) {
+    /* if (Math.random() < .01) {
         log(m.x, m.y)
-    }
+    } */
     m.x *= scale;
     m.y *= scale;
 
@@ -327,9 +357,43 @@ function getWorldMouse() {
 function loadText() {
     fetch("./text.md").then(data => {
         data.text().then(data => {
-            return data;
+            let split = data.split("    ");
+            let filtered = []
+            log(split.length)
+            for (let part of split) {
+                if (part.length > 0) {
+                    filtered.push(part)
+                }
+            }
+            /* for (let part of filtered) {
+                log(part, part.length)
+            } */
+            textLoaded = true;
+            log("text loaded")
+            text = filtered;
         })
     })
+}
+let textPoints = []
+
+function prepareText() {
+    for (let i = 0; i < text.length; i++) {
+        /* log(text[i]) */
+        textPoints.push(validPoints[Math.floor(Math.random() * validPoints.length)])
+    }
+}
+
+function printText() {
+    ctx.fillStyle = "black"
+    ctx.font = 20 * scale + "px Helvetica"
+    ctx.measureText(text[i])
+    for (let i = 0; i < text.length; i++) {
+        ctx.fillText(
+            text[i],
+            textPoints[i].x * scale + offset.x,
+            textPoints[i].y * scale + offset.y
+        )
+    }
 }
 
 function walls() {
@@ -475,31 +539,88 @@ function transformPoly(poly, offset, scale, angle = 0) {
     return new_poly;
 }
 
+function isLocationValid(x, y) {
+    let test = false;
+    for (let poly of shape) {
+        if (pointInPolygon([x, y], poly)) {
+            test = true;
+        };
+    }
+    return test;
+}
+
 function testCollisions(ctx) {
     let points = []
     for (x = 0; x < 100; x++) {
         for (y = 0; y < 100; y++) {
-            points.push(getWorldPos(x * innerWidth * .037, y * innerHeight * .04))
+            /* let p = getWorldPos(x * innerWidth * .037, y * innerHeight * .04); */
+            let p = {
+                x: x * innerWidth * .037,
+                y: y * innerHeight * .04
+            }
+            let noised = worldNoise(p.x, p.y)
+            p.x = noised[0]
+            p.y = noised[1]
+            p.collision = false;
+            points.push(p)
         }
     }
     /* log(points) */
-    let results = []
-    for (let p of points) {
+
+    for (let i = 0; i < points.length; i++) {
         for (let poly of shape) {
 
             /* ctx.beginPath() */
-            let test = pointInPolygon([p.x, p.y], poly);
+            let test = pointInPolygon([points[i].x, points[i].y], poly);
+            if (test) {
+                points[i].collision = true;
+            }
             /* ctx.fillStyle = test ? "lime" : "red" */
         }
     }
 
-    for (let result of results)
-        ctx.fillStyle = "red"
-    ctx.beginPath()
-    ctx.arc(p.x, p.y, 10 * scale, 0, Math.TWO_PI)
-    /* ctx.closePath() */
-    ctx.fill()
+    /* let maxDist = (Math.sin(frame * .1) + 1) / 2 * 10; */
+    let maxDist = 50;
+    log(maxDist)
+    for (let i = 0; i < points.length; i++) {
+        let deactivated = true;
+        if (points[i].collision == true) {
+            deactivated = false;
+            for (let j = 0; j < points.length; j++) {
+                if (
+                    points[j].collision == false &&
+                    distance(points[i].x, points[i].y, points[j].x, points[j].y) < maxDist) {
+                    deactivated = true;
+                }
+            }
+        }
+        if (!deactivated) validPoints.push(points[i])
+    }
+    displayValidPoints()
+
+    prepareText()
+
+    validPointsFound = true;
+
+    /* if (debug) {
+        validPoints = []
+    } else {
+        validPointsFound = true;
+    } */
+
+
     /* ctx.fillStyle = "purple"
     ctx.arc(offset.x, offset.y, 10, 0, Math.TWO_PI);
     ctx.fill() */
+}
+
+function displayValidPoints() {
+    for (let p of validPoints) {
+        ctx.fillStyle = p.collision ? "lime" : "red";
+        ctx.beginPath()
+        p = getWorldPos(p.x, p.y);
+        ctx.arc(p.x, p.y, 10 * scale, 0, Math.TWO_PI)
+        /* ctx.closePath() */
+        ctx.fill()
+    }
 }
