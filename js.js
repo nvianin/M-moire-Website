@@ -6,6 +6,9 @@ Math.Clamp = (val, min, max) => {
 Math.DegToRad = (deg) => {
     return deg * .0174533;
 }
+Math.HALF_PI = Math.PI / 2;
+Math.TWO_PI = Math.PI * 2;
+
 let angle_input;
 let canvas, ctx;
 let rooms = []
@@ -67,8 +70,8 @@ window.onload = () => {
     ctx = canvas.getContext("2d");
     ctx.lineCap = "square"
     longest = getLongest();
-    canvas.width = longest * (Math.PI / 2);
-    canvas.height = longest * (Math.PI / 2);
+    canvas.width = longest * (Math.HALF_PI);
+    canvas.height = longest * (Math.HALF_PI);
 
     hatching = ctx.createPattern(document.querySelector("#hatching"), "repeat")
     paper = document.querySelector("#paper")
@@ -186,6 +189,8 @@ let render = () => {
             }
         }
         ctx.resetTransform()
+
+        testCollisions(ctx)
         /* } */
     } /* else { */
     for (let i = 0; i < rooms.length; i++) {
@@ -206,12 +211,14 @@ let render = () => {
         m.y,
         20, 0, Math.PI * 2
     );
+    ctx.fill()
+
+
     /* ctx.arc(
         m.x + (Math.PI / 2 * longest - longest) / 2,
         m.y + (Math.PI / 2 * longest - longest) / 2,
         100, 0, Math.PI * 2
     ); */
-    ctx.fill()
     // debug draw
     /* ctx.scale(scale, scale); */
     /* ctx.translate(-offset.x, -offset.y); */
@@ -244,8 +251,8 @@ window.onwheel = e => {
 }
 window.onresize = () => {
     longest = innerWidth > innerHeight ? innerWidth : innerHeight;
-    canvas.width = longest * (Math.PI / 2);
-    canvas.height = longest * (Math.PI / 2);
+    canvas.width = longest * (Math.HALF_PI);
+    canvas.height = longest * (Math.HALF_PI);
 }
 window.onkeydown = e => {
     let direction = {
@@ -289,11 +296,31 @@ function rotateMouse() {
     return rotateVector(vec, -Math.DegToRad(document.angle))
 }
 
+function getWorldPos(x, y) {
+    x *= scale;
+    y *= scale;
+    x += offset.x
+    y += offset.y
+
+    return {
+        x,
+        y
+    }
+}
+
 function getWorldMouse() {
     let m = rotateMouse();
+    m = getWorldPos(m.x, m.y);
+    m.x -= (longest * Math.HALF_PI - innerWidth) / 2 + offset.x
+    m.y -= (longest * Math.HALF_PI - innerHeight) / 2 + offset.y
+    if (Math.random() < .01) {
+        log(m.x, m.y)
+    }
+    m.x *= scale;
+    m.y *= scale;
 
-
-
+    /* 
+     */
     return m;
 }
 
@@ -325,16 +352,19 @@ function walls() {
     }).regions)
     log(regions)
 
-
-    for (poly of regions) {
-        for (point of poly) {
-            let sc = .0004;
-            point[0] += noise.simplex2(point[0] * sc * .5, point[1] * sc * .5) * 30
-            point[1] += noise.simplex2(point[1] * sc, point[0] * sc) * 30
-        }
-    }
+    log(regions[0][0])
+    regions = regions.map(r => r.map(p => worldNoise(p[0], p[1])))
+    log(regions[0][0])
     shapeready = true;
     shape = regions;
+}
+
+function worldNoise(x, y) {
+    let point = [x, y]
+    let sc = .0004;
+    point[0] += noise.simplex2(x * sc * .5, y * sc * .5) * 30
+    point[1] += noise.simplex2(y * sc, x * sc) * 30
+    return point
 }
 
 
@@ -443,4 +473,33 @@ function transformPoly(poly, offset, scale, angle = 0) {
         new_poly.push(point)
     }
     return new_poly;
+}
+
+function testCollisions(ctx) {
+    let points = []
+    for (x = 0; x < 100; x++) {
+        for (y = 0; y < 100; y++) {
+            points.push(getWorldPos(x * innerWidth * .037, y * innerHeight * .04))
+        }
+    }
+    /* log(points) */
+    let results = []
+    for (let p of points) {
+        for (let poly of shape) {
+
+            /* ctx.beginPath() */
+            let test = pointInPolygon([p.x, p.y], poly);
+            /* ctx.fillStyle = test ? "lime" : "red" */
+        }
+    }
+
+    for (let result of results)
+        ctx.fillStyle = "red"
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, 10 * scale, 0, Math.TWO_PI)
+    /* ctx.closePath() */
+    ctx.fill()
+    /* ctx.fillStyle = "purple"
+    ctx.arc(offset.x, offset.y, 10, 0, Math.TWO_PI);
+    ctx.fill() */
 }
