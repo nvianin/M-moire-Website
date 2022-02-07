@@ -386,8 +386,8 @@ function prepareText() {
 function printText() {
     ctx.fillStyle = "black"
     ctx.font = 20 * scale + "px Helvetica"
-    ctx.measureText(text[i])
     for (let i = 0; i < text.length; i++) {
+        log(ctx.measureText(text[i]))
         ctx.fillText(
             text[i],
             textPoints[i].x * scale + offset.x,
