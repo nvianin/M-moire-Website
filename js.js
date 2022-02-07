@@ -33,7 +33,6 @@ let validPointsFound = false;
 
 let text;
 let textLoaded = false;
-loadText()
 
 let paper;
 let paperSize = 800;
@@ -85,6 +84,8 @@ window.onload = () => {
     longest = getLongest();
     canvas.width = longest * (Math.HALF_PI);
     canvas.height = longest * (Math.HALF_PI);
+    loadText();
+
 
     hatching = ctx.createPattern(document.querySelector("#hatching"), "repeat")
     paper = document.querySelector("#paper")
@@ -371,6 +372,11 @@ function loadText() {
             textLoaded = true;
             log("text loaded")
             text = filtered;
+            let slicedText = []
+            for (let i = 0; i < text.length; i++) {
+                slicedText[i] = sliceLines(text[i], 200);
+                log(slicedText[i])
+            }
         })
     })
 }
@@ -379,7 +385,40 @@ let textPoints = []
 function prepareText() {
     for (let i = 0; i < text.length; i++) {
         /* log(text[i]) */
-        textPoints.push(validPoints[Math.floor(Math.random() * validPoints.length)])
+        /* textPoints.push(validPoints[Math.floor(Math.random() * validPoints.length)]) */
+        textPoints.push(validPoints[Math.floor(validPoints.length / text.length * i)])
+        /* textPoints.push(findValidArea(200, 200)) */
+    }
+}
+
+function isAreaValid(x, y, width, height) {
+    let res = 10;
+    let valid = true;
+    for (x < x + width; x += res;) {
+        if (valid) {
+            for (y < y + height; y += res;) {
+                if (!isLocationValid(x, y)) {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+    }
+    return valid;
+}
+
+let textBoxes = []
+
+// Needs to also check for previously allowed areas that are now blocked by text
+function findValidArea(width, height, fails = 0) {
+    let potentialSpot = validPoints[Math.floor(Math.random() * validPoints.length)]
+    if (isAreaValid(potentialSpot.x, potentialSpot.y, width, height)) {
+        return potentialSpot
+    } else if (fails < 5) {
+        fails++
+        return findValidArea(width, height, fails);
+    } else {
+        return potentialSpot
     }
 }
 
@@ -387,14 +426,38 @@ function printText() {
     ctx.fillStyle = "black"
     ctx.font = 20 * scale + "px Helvetica"
     for (let i = 0; i < text.length; i++) {
-        log(ctx.measureText(text[i]))
-        ctx.fillText(
-            text[i],
-            textPoints[i].x * scale + offset.x,
-            textPoints[i].y * scale + offset.y
-        )
+        /* log(ctx.measureText(text[i])) */
+        let lines = sliceLines(text[i], 200);
+
+        let lineHeight = 2;
+        for (let j = 0; j < lines.length; j++) {
+            ctx.fillText(
+                lines[j],
+                textPoints[i].x * scale + offset.x,
+                textPoints[i].y * scale + offset.y + lineHeight * scale
+            )
+            lineHeight += 20
+        }
     }
 }
+
+function sliceLines(text, width) {
+    let t = text.split(" ");
+    /* log(this.text.split(" ")) */
+    let lines = []
+    let line = ""
+    for (let k = 0; k < t.length; k++) {
+        line += " " + t[k];
+        ctx.font = 14 * scale + "px Helvetica";
+        let lineWidth = ctx.measureText(line).width / scale;
+        if ( /* !isLocationValid(textPoints[i].x + lineWidth, textPoints[i].y) || */ k >= t.length - 1 || line.length > 75 || lineWidth > width) {
+            lines.push(line);
+            line = ""
+        };
+    }
+    return lines;
+}
+
 
 function walls() {
     let regions = []
@@ -551,8 +614,8 @@ function isLocationValid(x, y) {
 
 function testCollisions(ctx) {
     let points = []
-    for (x = 0; x < 100; x++) {
-        for (y = 0; y < 100; y++) {
+    for (y = 0; y < 100; y++) {
+        for (x = 0; x < 100; x++) {
             /* let p = getWorldPos(x * innerWidth * .037, y * innerHeight * .04); */
             let p = {
                 x: x * innerWidth * .037,
@@ -574,6 +637,15 @@ function testCollisions(ctx) {
             let test = pointInPolygon([points[i].x, points[i].y], poly);
             if (test) {
                 points[i].collision = true;
+                let length_test = false;
+                for (let x = 0; x < 350; x += 10) {
+                    if (!pointInPolygon([points[i].x + x, points[i].y], poly)) {
+                        length_test = true;
+                    }
+                }
+                if (length_test) {
+                    points[i].collision = false;
+                }
             }
             /* ctx.fillStyle = test ? "lime" : "red" */
         }
@@ -615,12 +687,15 @@ function testCollisions(ctx) {
 }
 
 function displayValidPoints() {
+    let i = 0;
     for (let p of validPoints) {
         ctx.fillStyle = p.collision ? "lime" : "red";
+        ctx.fillStyle = "rgb(0, 255, " + i / validPoints.length * 255 + ")";
         ctx.beginPath()
         p = getWorldPos(p.x, p.y);
         ctx.arc(p.x, p.y, 10 * scale, 0, Math.TWO_PI)
         /* ctx.closePath() */
         ctx.fill()
+        i++;
     }
 }
