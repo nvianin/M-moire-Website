@@ -12,7 +12,9 @@
     <script src="html2canvas.min.js"></script>
 
     <!-- <script src="/M-moire-Website/node_modules/aabb/index.js"></script> -->
-    <script src="./node_modules/aabb/index.js"></script>
+    <script src="curve.js"></script>
+    <script src="aabb.js"></script>
+    <!-- <script src="cubic-spline.js"></script> -->
     <script src="noise.js"></script>
     <script src="pip.js"></script>i
     <script src="polybool.js"></script>
@@ -27,6 +29,10 @@
     <input type="range" id="angle" min="-180" max="180" value="0" step=".1">
     <div id="canvas-container">
         <canvas></canvas>
+    </div>
+    <div id="arrow-container">
+        <div class="arrow" id="left-arrow"></div>
+        <div class="arrow" id="right-arrow"></div>
     </div>
 
     <!-- textures -->

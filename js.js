@@ -6,6 +6,9 @@ Math.Clamp = (val, min, max) => {
 Math.DegToRad = (deg) => {
     return deg * .0174533;
 }
+Math.Lerp = (start, end, amt) => {
+    return (1 - amt) * start + amt * end
+}
 
 function distance(x, y, x1, y1) {
     var dx = x1 - x;
@@ -20,7 +23,17 @@ let canvas, ctx;
 let rooms = []
 let scale = .2;
 document.angle = 0;
-let debug = true;
+let debug = false;
+
+let offset = {
+    x: innerWidth / 2,
+    y: 700
+}
+let offset_goal = {
+    x: offset.x,
+    y: offset.y
+}
+let attached_to_mouse = false;
 
 noise.seed(Math.random())
 
@@ -37,9 +50,11 @@ let textLoaded = false;
 let paper;
 let paperSize = 250;
 
+let leftarrow, rightarrow;
+
 let tryspawn = () => {
     let p = new PoissonDiskSampling({
-        shape: [1000 * 3.2, 1000 * 3.2],
+        shape: [1333 * 3.2, 1333 * 3.2],
         minDistance: 400,
         maxDistance: 800,
         tries: 10
@@ -86,6 +101,16 @@ window.onload = () => {
     canvas.height = longest * (Math.HALF_PI);
     loadText();
 
+    leftarrow = document.querySelector("#left-arrow")
+    rightarrow = document.querySelector("#right-arrow")
+
+    leftarrow.onclick = () => {
+        attached_to_mouse = false;
+    }
+    rightarrow.onclick = () => {
+        attached_to_mouse = false;
+    }
+
     hatching = ctx.createPattern(document.querySelector("#hatching"), "repeat")
     paper = document.querySelector("#paper")
     paper.style.backgroundPosition = offset.x + "px " + offset.y + "px"
@@ -99,6 +124,7 @@ window.onload = () => {
         rooms.length)
     render()
     angle_input = document.querySelector("#angle");
+    angle_input.style.display = "none"
     angle_input.addEventListener("input", e => {
         /* log(angle_input.value) */
         document.angle = parseFloat(angle_input.value)
@@ -108,6 +134,9 @@ window.onload = () => {
     canvas.onpointerdown = e => {
         canvas.style.cursor = "grabbing"
         mousedown = true;
+        if (!attached_to_mouse) {
+            attached_to_mouse = true;
+        }
         let m = rotateMouse()
         startPos.x = m.x - offset.x;
         startPos.y = m.y - offset.y;
@@ -176,6 +205,11 @@ let render = () => {
     }
     prevPushFails = pushfails;
     prevpullfails = pullfails;
+
+    if (distance(offset.x, offset.y, offset_goal.x, offset_goal.y) > 1 && !attached_to_mouse) {
+        offset.x = Math.Lerp(offset.x, offset_goal.x, .1);
+        offset.y = Math.Lerp(offset.y, offset_goal.y, .1);
+    }
 
     ctx.fillStyle = "white"
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -261,7 +295,39 @@ let render = () => {
         ctx.fill()
     }
     if (textBoxesInitialized) {
-        fillTextBoxes()
+        /* fillTextBoxes() */
+        fillTextChain()
+        displaySpline()
+        if (debug) {
+            try {
+                ctx.lineWidth = 5 * scale
+                ctx.strokeStyle = "maroon"
+                for (let l of links) {
+                    /* log(l) */
+                    ctx.beginPath()
+                    ctx.moveTo(l[0][0] * scale + offset.x, l[0][1] * scale + offset.y);
+                    ctx.lineTo(l[1][0] * scale + offset.x, l[1][1] * scale + offset.y);
+                    ctx.closePath()
+                    ctx.stroke()
+                }
+            } catch {}
+            let i = 0;
+            for (let box of textBoxes) {
+                if (box[4]) {
+                    ctx.strokeStyle = "blue"
+                } else {
+                    ctx.strokeStyle = "rgb(255,0," + i / textBoxes.length * 255 + ")"
+                }
+                ctx.beginPath();
+                ctx.moveTo(box[0][0] * scale + offset.x, box[0][1] * scale + offset.y);
+                ctx.lineTo(box[1][0] * scale + offset.x, box[1][1] * scale + offset.y);
+                ctx.lineTo(box[2][0] * scale + offset.x, box[2][1] * scale + offset.y);
+                ctx.lineTo(box[3][0] * scale + offset.x, box[3][1] * scale + offset.y);
+                ctx.closePath()
+                ctx.stroke()
+                i++;
+            }
+        }
     }
 
 }
@@ -269,10 +335,6 @@ let mousedown = false;
 let startPos = {
     x: 0,
     y: 0
-}
-let offset = {
-    x: innerWidth / 2,
-    y: 700
 }
 /* offset.x = 0;
 offset.y = 0; */
@@ -365,7 +427,7 @@ function getWorldMouse() {
 function loadText() {
     fetch("./text.md").then(data => {
         data.text().then(data => {
-            let split = data.split("    ");
+            let split = data.split("***");
             let filtered = []
             log(split.length)
             for (let part of split) {
@@ -438,6 +500,7 @@ function findValidArea(width, height, fails = 0) {
 }
 
 let order = []
+let neighbourhood = []
 
 function findValidAreas() {
     let i = 0;
@@ -470,7 +533,6 @@ function findValidAreas() {
     }
     log(textBoxes);
 
-    let neighbourhood = []
     let minDist = 400;
 
     for (let i = 0; i < textBoxes.length; i++) {
@@ -502,6 +564,8 @@ function findValidAreas() {
                     order.push([previous, n]);
                     found = true
                     previous = n;
+                    textBoxes[n][4] = true;
+                    textBoxes[previous][4] = true;
                     break;
                 }
             }
@@ -515,8 +579,11 @@ function findValidAreas() {
             }
         } catch (e) {
             log(e)
+            break;
         }
     }
+
+    buildSplineFromOrder()
 
 
     /* for (let i = 0; i < textBoxes.length; i++) {
@@ -741,15 +808,27 @@ function isTextLocationValid(x, y) {
     }
     return test;
 }
+let spline;
+
+function buildSplineFromOrder() {
+    let points = []
+    for (let i = 0; i < order.length; i++) {
+        let c = getTextBoxCenter(order[i][0])
+        points.push(c.x);
+        points.push(c.y);
+    }
+    spline = points
+
+}
 
 function testCollisions(ctx) {
     let points = []
-    for (x = 0; x < 100; x++) {
-        for (y = 0; y < 100; y++) {
+    for (x = 0; x < 120; x++) {
+        for (y = 0; y < 120; y++) {
             /* let p = getWorldPos(x * innerWidth * .037, y * innerHeight * .04); */
             let p = {
-                x: x * innerWidth * .037,
-                y: y * innerHeight * .04
+                x: x * 1333 * .037,
+                y: y * 1333 * .04
             }
             let noised = worldNoise(p.x, p.y)
             p.x = noised[0]
@@ -832,6 +911,77 @@ function displayValidPoints() {
     }
 }
 
+function transformSpline() {
+    let transformed_spline = []
+    for (let i = 0; i < spline.length; i += 2) {
+        transformed_spline.push(spline[i] * scale + offset.x)
+        transformed_spline.push(spline[i + 1] * scale + offset.y)
+    }
+    return transformed_spline
+}
+
+function displaySpline() {
+    /* ctx.moveTo(spline) */
+    ctx.setLineDash([1, 3])
+    ctx.lineWidth = 10 * scale
+    ctx.strokeStyle = "#333"
+    let s = transformSpline();
+    ctx.beginPath()
+    ctx.fillStyle = "maroon"
+    ctx.arc(s[0], s[1], 10, 0, Math.TWO_PI)
+    ctx.closePath()
+    ctx.fill()
+    ctx.moveTo(s[0], s[1])
+    ctx.curve(transformSpline())
+    ctx.stroke()
+    ctx.setLineDash([])
+}
+
+function fillTextChain() {
+    ctx.fillStyle = "black"
+    ctx.font = 20 * scale + "px Helvetica"
+    let leftover = []
+    /* log(text) */
+    for (let i = 0; i < order.length; i++) {
+        let lines;
+        let textBox = textBoxes[order[i][0]];
+        if (leftover.length > 0) {
+            lines = leftover;
+            leftover = []
+        } else {
+            try {
+                lines = sliceLines(text[i], textBox[1][0] - textBox[0][0] - 50)
+            } catch {
+                log("FUCK")
+                log(order.length, text.length)
+                setTimeout(() => {
+                    log("FUCK FUCK FUCK")
+                    location.reload()
+                }, 1000)
+            }
+        }
+        let lineHeight = 2;
+        let lineMargin = 20
+        let broke = false;
+        for (let j = 0; j < lines.length; j++) {
+            if (!broke) {
+                ctx.fillText(
+                    lines[j],
+                    textBox[0][0] * scale + offset.x,
+                    (textBox[0][1] + lineHeight) * scale + offset.y
+                )
+                lineHeight += lineMargin;
+                if (lineMargin * j + 2 > textBox[2][1] - textBox[1][1] - 20) {
+                    for (let k = j + 1; k < lines.length; k++) {
+                        leftover.push(lines[k])
+                    }
+                    broke = true
+                }
+            }
+        }
+    }
+}
+
 function fillTextBoxes() {
     let links = []
     ctx.fillStyle = "black"
@@ -862,7 +1012,7 @@ function fillTextBoxes() {
         /* log(ctx.measureText(text[i])) */
         /* let lines = sliceLines(text[i], 200); */
         let lineHeight = 2;
-        let lineMargin = 20
+
         let broke = false;
         for (let j = 0; j < lines.length; j++) {
             if (!broke) {
@@ -881,28 +1031,52 @@ function fillTextBoxes() {
             }
         }
     }
-    if (debug) {
-        ctx.lineWidth = 5 * scale
-        ctx.strokeStyle = "maroon"
-        for (let l of links) {
-            /* log(l) */
-            ctx.beginPath()
-            ctx.moveTo(l[0][0] * scale + offset.x, l[0][1] * scale + offset.y);
-            ctx.lineTo(l[1][0] * scale + offset.x, l[1][1] * scale + offset.y);
-            ctx.closePath()
-            ctx.stroke()
-        }
-        let i = 0;
-        for (let box of textBoxes) {
-            ctx.strokeStyle = "rgb(255,0," + i / textBoxes.length * 255 + ")"
-            ctx.beginPath();
-            ctx.moveTo(box[0][0] * scale + offset.x, box[0][1] * scale + offset.y);
-            ctx.lineTo(box[1][0] * scale + offset.x, box[1][1] * scale + offset.y);
-            ctx.lineTo(box[2][0] * scale + offset.x, box[2][1] * scale + offset.y);
-            ctx.lineTo(box[3][0] * scale + offset.x, box[3][1] * scale + offset.y);
-            ctx.closePath()
-            ctx.stroke()
-            i++;
-        }
+
+}
+
+function getTextBoxCenter(i) {
+    let center = {
+        x: 0,
+        y: 0
     }
+
+    center.x = textBoxes[i][0][0] + (textBoxes[i][1][0] - textBoxes[i][0][0]) / 2
+    center.y = textBoxes[i][0][1] + (textBoxes[i][3][1] - textBoxes[i][0][1]) / 2
+
+    return center;
+}
+
+function makeSpline(data, k) {
+
+    if (k == null) k = 1;
+
+    var size = data.length;
+    var last = size - 4;
+
+    var path = "M" + [data[0], data[1]];
+
+    for (var i = 0; i < size - 2; i += 2) {
+
+        var x0 = i ? data[i - 2] : data[0];
+        var y0 = i ? data[i - 1] : data[1];
+
+        var x1 = data[i + 0];
+        var y1 = data[i + 1];
+
+        var x2 = data[i + 2];
+        var y2 = data[i + 3];
+
+        var x3 = i !== last ? data[i + 4] : x2;
+        var y3 = i !== last ? data[i + 5] : y2;
+
+        var cp1x = x1 + (x2 - x0) / 6 * k;
+        var cp1y = y1 + (y2 - y0) / 6 * k;
+
+        var cp2x = x2 - (x3 - x1) / 6 * k;
+        var cp2y = y2 - (y3 - y1) / 6 * k;
+
+        path += "C" + [cp1x, cp1y, cp2x, cp2y, x2, y2];
+    }
+
+    return path;
 }
