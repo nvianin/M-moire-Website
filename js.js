@@ -35,13 +35,13 @@ let text;
 let textLoaded = false;
 
 let paper;
-let paperSize = 800;
+let paperSize = 250;
 
 let tryspawn = () => {
     let p = new PoissonDiskSampling({
-        shape: [innerWidth * 3, innerHeight * 3],
-        minDistance: 300,
-        maxDistance: 600,
+        shape: [1000 * 3.2, 1000 * 3.2],
+        minDistance: 400,
+        maxDistance: 800,
         tries: 10
     })
     p = p.fill();
@@ -50,8 +50,8 @@ let tryspawn = () => {
         let r = new Room(
             p[i][0],
             p[i][1] * 1,
-            Math.random() * 200 + 250,
-            Math.random() * 400 + 200
+            Math.random() * 450 + 250,
+            Math.random() * 800 + 200
         );
         r.offset.x = offset.x;
         r.offset.y = offset.y;
@@ -86,11 +86,10 @@ window.onload = () => {
     canvas.height = longest * (Math.HALF_PI);
     loadText();
 
-
     hatching = ctx.createPattern(document.querySelector("#hatching"), "repeat")
     paper = document.querySelector("#paper")
     paper.style.backgroundPosition = offset.x + "px " + offset.y + "px"
-    paper.style.backgroundOrigin = (offset.x + innerWidth / 2) + "px " + (offset.y + innerHeight / 2) + "px"
+    /* paper.style.backgroundOrigin = (offset.x + longest / 2) + "px " + (offset.y + longest / 2) + "px" */
     paper.style.backgroundSize = paperSize * scale + "px"
 
     while (rooms.length < 11) {
@@ -148,7 +147,7 @@ window.onload = () => {
         }
 
         paper.style.backgroundPosition = offset.x + "px " + offset.y + "px"
-        paper.style.backgroundOrigin = (offset.x) + "px " + (offset.y) + "px"
+        /* paper.style.backgroundOrigin = (-offset.x) + "px " + (-offset.y) + "px" */
         /* log(paper.style.backgroundPosition) */
 
     }
@@ -208,7 +207,9 @@ let render = () => {
         }
         ctx.resetTransform()
         if (validPointsFound) {
-            displayValidPoints()
+            if (debug) {
+                displayValidPoints()
+            }
             printText()
         } else {
             testCollisions(ctx)
@@ -260,6 +261,85 @@ let render = () => {
         ctx.fill()
     }
 
+    if (textBoxesInitialized && false) {
+        /* ctx.lineWidth = 10 * scale */
+        let links = []
+        ctx.fillStyle = "black"
+        ctx.font = 20 * scale + "px Helvetica"
+        let leftover = []
+        for (let i = 0; i < text.length + leftover.length; i++) {
+            let textBox = textBoxes[i * 2];
+            /*     log(part) */
+            if (i > 0) {
+                links.push(
+                    [
+                        [textBox[0][0],
+                            textBox[0][1]
+                        ],
+                        [textBoxes[(i - 1) * 2][0][0],
+                            textBoxes[(i - 1) * 2][0][1]
+                        ]
+                    ]
+                )
+            }
+            let lines;
+            if (leftover.length > 0) {
+                lines = leftover
+                leftover = []
+            } else {
+                lines = sliceLines(text[i], textBox[1][0] - textBox[0][0] - 50)
+            }
+            /* log(ctx.measureText(text[i])) */
+            /* let lines = sliceLines(text[i], 200); */
+            let lineHeight = 2;
+            let lineMargin = 20
+            let broke = false;
+            for (let j = 0; j < lines.length; j++) {
+                if (!broke) {
+                    ctx.fillText(
+                        lines[j],
+                        textBox[0][0] * scale + offset.x,
+                        (textBox[0][1] + lineHeight) * scale + offset.y
+                    )
+                    lineHeight += lineMargin
+                    if (lineMargin * j + 2 > textBox[2][1] - textBox[1][1] - 20) {
+                        for (let k = j + 1; k < lines.length; k++) {
+                            leftover.push(lines[k])
+                        }
+                        broke = true;
+                    }
+                }
+            }
+        }
+        if (debug) {
+            ctx.lineWidth = 5 * scale
+            ctx.strokeStyle = "maroon"
+            for (let l of links) {
+                /* log(l) */
+                ctx.beginPath()
+                ctx.moveTo(l[0][0] * scale + offset.x, l[0][1] * scale + offset.y);
+                ctx.lineTo(l[1][0] * scale + offset.x, l[1][1] * scale + offset.y);
+                ctx.closePath()
+                ctx.stroke()
+            }
+            let i = 0;
+            for (let box of textBoxes) {
+                ctx.strokeStyle = "rgb(255,0," + i / textBoxes.length * 255 + ")"
+                ctx.beginPath();
+                ctx.moveTo(box[0][0] * scale + offset.x, box[0][1] * scale + offset.y);
+                ctx.lineTo(box[1][0] * scale + offset.x, box[1][1] * scale + offset.y);
+                ctx.lineTo(box[2][0] * scale + offset.x, box[2][1] * scale + offset.y);
+                ctx.lineTo(box[3][0] * scale + offset.x, box[3][1] * scale + offset.y);
+                ctx.closePath()
+                ctx.stroke()
+                i++;
+            }
+        }
+    }
+    if (textBoxesInitialized) {
+        fillTextBoxes()
+    }
+
 }
 let mousedown = false;
 let startPos = {
@@ -275,7 +355,10 @@ offset.y = 0; */
 window.onwheel = e => {
     scale = Math.Clamp(scale - e.deltaY * .001, .15, 5)
     log(scale)
+    /* offset.x /= scale;
+    offset.y /= scale; */
     paper.style.backgroundSize = paperSize * scale + "px";
+    /* paper.style.backgroundOrigin = (-offset.x) + "px " + (-offset.y) + "px" */
     /* for (let r of rooms) {
         r.scale = scale;
     } */
@@ -375,7 +458,7 @@ function loadText() {
             let slicedText = []
             for (let i = 0; i < text.length; i++) {
                 slicedText[i] = sliceLines(text[i], 200);
-                log(slicedText[i])
+                /* log(slicedText[i]) */
             }
         })
     })
@@ -383,20 +466,27 @@ function loadText() {
 let textPoints = []
 
 function prepareText() {
+    log("preparing text")
     for (let i = 0; i < text.length; i++) {
         /* log(text[i]) */
         /* textPoints.push(validPoints[Math.floor(Math.random() * validPoints.length)]) */
         textPoints.push(validPoints[Math.floor(validPoints.length / text.length * i)])
+        /* textBoxes.push(findValidArea()) */
         /* textPoints.push(findValidArea(200, 200)) */
     }
+    findValidAreas()
 }
 
-function isAreaValid(x, y, width, height) {
+function isAreaValid(_x, _y, width, height) {
     let res = 10;
     let valid = true;
-    for (x < x + width; x += res;) {
+    let max = {
+        x: _x + width,
+        y: _y + height
+    }
+    for (let x = _x; x < max.x; x += res) {
         if (valid) {
-            for (y < y + height; y += res;) {
+            for (let y = _y; y < max.y; y += res) {
                 if (!isLocationValid(x, y)) {
                     valid = false;
                     break;
@@ -408,6 +498,7 @@ function isAreaValid(x, y, width, height) {
 }
 
 let textBoxes = []
+let textBoxesInitialized = false;
 
 // Needs to also check for previously allowed areas that are now blocked by text
 function findValidArea(width, height, fails = 0) {
@@ -422,7 +513,106 @@ function findValidArea(width, height, fails = 0) {
     }
 }
 
+let order = []
+
+function findValidAreas() {
+    let i = 0;
+    for (let p of validPoints) {
+        let box = {
+            w: 300,
+            h: 250,
+            x: p.x,
+            y: p.y
+        }
+        let test = isAreaValid(box.x, box.y, box.w, box.h);
+
+        let aabb = new AABB([box.x, box.y], [box.x + box.w, box.y + box.h]);
+        for (let b of textBoxes) {
+            let aabb2 = new AABB(b[0], b[2]);
+            let test_2 = aabb.overlaps(aabb2);
+            if (test_2) test = false
+        }
+        /* log(test, i); */
+
+        if (test) {
+            textBoxes.push([
+                [box.x, box.y],
+                [box.x + box.w, box.y],
+                [box.x + box.w, box.y + box.h],
+                [box.x, box.y + box.h]
+            ])
+        }
+        i++
+    }
+    log(textBoxes);
+
+    let neighbourhood = []
+    let minDist = 400;
+
+    for (let i = 0; i < textBoxes.length; i++) {
+        neighbourhood[i] = []
+        for (let j = i + 1; j < textBoxes.length; j++) {
+            if (distance(textBoxes[i][0][0], textBoxes[i][0][1], textBoxes[j][0][0], textBoxes[j][0][1]) < minDist) {
+                neighbourhood[i].push(j)
+            }
+        }
+    }
+
+    log(neighbourhood)
+    i = 0;
+    while (!neighbourhood[i][0]) {
+        i++;
+    }
+    order.push([0, neighbourhood[i][0]]);
+    i = 0;
+    log(order)
+    let previous = order[0][1]
+    while (i < 200) {
+        i++;
+        try {
+            log(i, previous)
+            let found = false
+            for (let n of neighbourhood[previous]) {
+                log(n)
+                if (!textBoxes[n][4]) {
+                    order.push([previous, n]);
+                    found = true
+                    previous = n;
+                    break;
+                }
+            }
+            if (!found) {
+                log("no neighbour")
+                log(neighbourhood[previous])
+                previous++;
+
+            } else {
+                log("found neighbour,")
+            }
+        } catch (e) {
+            log(e)
+        }
+    }
+
+
+    /* for (let i = 0; i < textBoxes.length; i++) {
+        for (let n of neighbourhood[i]) {
+            if (!textBoxes[n][4]) {
+                order.push([i, n])
+                textBoxes[n][4] = true;
+                textBoxes[i][4] = true
+            }
+            break;
+        }
+    } */
+
+    log(order)
+
+    textBoxesInitialized = true;
+}
+
 function printText() {
+    return false
     ctx.fillStyle = "black"
     ctx.font = 20 * scale + "px Helvetica"
     for (let i = 0; i < text.length; i++) {
@@ -441,7 +631,7 @@ function printText() {
     }
 }
 
-function sliceLines(text, width) {
+function sliceLines(text, width, height = 9000) {
     let t = text.split(" ");
     /* log(this.text.split(" ")) */
     let lines = []
@@ -460,6 +650,7 @@ function sliceLines(text, width) {
 
 
 function walls() {
+    log("loading walls")
     let regions = []
     let roompoints = []
 
@@ -612,10 +803,25 @@ function isLocationValid(x, y) {
     return test;
 }
 
+function isTextLocationValid(x, y) {
+    let test = false;
+    for (let poly of shape) {
+        if (pointInPolygon([x, y], poly)) {
+            test = true;
+        }
+    }
+    for (let box of textBoxes) {
+        if (pointInPolygon([x, y], box)) {
+            test = true;
+        }
+    }
+    return test;
+}
+
 function testCollisions(ctx) {
     let points = []
-    for (y = 0; y < 100; y++) {
-        for (x = 0; x < 100; x++) {
+    for (x = 0; x < 100; x++) {
+        for (y = 0; y < 100; y++) {
             /* let p = getWorldPos(x * innerWidth * .037, y * innerHeight * .04); */
             let p = {
                 x: x * innerWidth * .037,
@@ -652,7 +858,7 @@ function testCollisions(ctx) {
     }
 
     /* let maxDist = (Math.sin(frame * .1) + 1) / 2 * 10; */
-    let maxDist = 50;
+    let maxDist = 20;
     log(maxDist)
     for (let i = 0; i < points.length; i++) {
         let deactivated = true;
@@ -668,7 +874,9 @@ function testCollisions(ctx) {
         }
         if (!deactivated) validPoints.push(points[i])
     }
-    displayValidPoints()
+    if (debug) {
+        displayValidPoints()
+    }
 
     prepareText()
 
@@ -697,5 +905,80 @@ function displayValidPoints() {
         /* ctx.closePath() */
         ctx.fill()
         i++;
+    }
+}
+
+function fillTextBoxes() {
+    let links = []
+    ctx.fillStyle = "black"
+    ctx.font = 20 * scale + "px Helvetica"
+    let leftover = []
+    for (let i = 0; i < text.length + leftover.length; i++) {
+        let textBox = textBoxes[i * 2];
+        /*     log(part) */
+        if (i > 0) {
+            links.push(
+                [
+                    [textBox[0][0],
+                        textBox[0][1]
+                    ],
+                    [textBoxes[(i - 1) * 2][0][0],
+                        textBoxes[(i - 1) * 2][0][1]
+                    ]
+                ]
+            )
+        }
+        let lines;
+        if (leftover.length > 0) {
+            lines = leftover
+            leftover = []
+        } else {
+            lines = sliceLines(text[i], textBox[1][0] - textBox[0][0] - 50)
+        }
+        /* log(ctx.measureText(text[i])) */
+        /* let lines = sliceLines(text[i], 200); */
+        let lineHeight = 2;
+        let lineMargin = 20
+        let broke = false;
+        for (let j = 0; j < lines.length; j++) {
+            if (!broke) {
+                ctx.fillText(
+                    lines[j],
+                    textBox[0][0] * scale + offset.x,
+                    (textBox[0][1] + lineHeight) * scale + offset.y
+                )
+                lineHeight += lineMargin
+                if (lineMargin * j + 2 > textBox[2][1] - textBox[1][1] - 20) {
+                    for (let k = j + 1; k < lines.length; k++) {
+                        leftover.push(lines[k])
+                    }
+                    broke = true;
+                }
+            }
+        }
+    }
+    if (debug) {
+        ctx.lineWidth = 5 * scale
+        ctx.strokeStyle = "maroon"
+        for (let l of links) {
+            /* log(l) */
+            ctx.beginPath()
+            ctx.moveTo(l[0][0] * scale + offset.x, l[0][1] * scale + offset.y);
+            ctx.lineTo(l[1][0] * scale + offset.x, l[1][1] * scale + offset.y);
+            ctx.closePath()
+            ctx.stroke()
+        }
+        let i = 0;
+        for (let box of textBoxes) {
+            ctx.strokeStyle = "rgb(255,0," + i / textBoxes.length * 255 + ")"
+            ctx.beginPath();
+            ctx.moveTo(box[0][0] * scale + offset.x, box[0][1] * scale + offset.y);
+            ctx.lineTo(box[1][0] * scale + offset.x, box[1][1] * scale + offset.y);
+            ctx.lineTo(box[2][0] * scale + offset.x, box[2][1] * scale + offset.y);
+            ctx.lineTo(box[3][0] * scale + offset.x, box[3][1] * scale + offset.y);
+            ctx.closePath()
+            ctx.stroke()
+            i++;
+        }
     }
 }

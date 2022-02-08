@@ -50,12 +50,15 @@ canvas {
   height: 100%;
   z-index: 100;
 
-  background-image: url("paper.jpg");
-  background-color: rgba(1, 1, 1, 0.1);
+  background-image: url("dots.png");
+  /* background-color: rgb(300, 300, 300); */
   background-size: 400px;
+  background-origin: content-box;
+  background-blend-mode: luminosity;
+  /* image-rendering: pixelated; */
   mix-blend-mode: multiply;
   pointer-events: none;
-  opacity: 0.8;
+  opacity: 0.23;
 }
 
 #test-canvas {
