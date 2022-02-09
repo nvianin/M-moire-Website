@@ -33,6 +33,7 @@ let offset_goal = {
     x: offset.x,
     y: offset.y
 }
+let current_goal = 0;
 let attached_to_mouse = false;
 
 noise.seed(Math.random())
@@ -106,9 +107,27 @@ window.onload = () => {
 
     leftarrow.onclick = () => {
         attached_to_mouse = false;
+        if (current_goal > 0) {
+            current_goal--;
+        } else {
+            current_goal = order.length - 1
+        }
+        let center = getTextBoxCenter(order[current_goal][0]);
+        log(current_goal, center)
+        offset_goal.x = -center.x * scale + longest / 2 * Math.HALF_PI;
+        offset_goal.y = -center.y * scale + longest / 2 * Math.HALF_PI;
     }
     rightarrow.onclick = () => {
         attached_to_mouse = false;
+        if (current_goal < order.length - 1) {
+            current_goal++;
+        } else {
+            current_goal = 0;
+        }
+        let center = getTextBoxCenter(order[current_goal][0]);
+        log(current_goal, center)
+        offset_goal.x = -center.x * scale + longest / 2 * Math.HALF_PI;
+        offset_goal.y = -center.y * scale + longest / 2 * Math.HALF_PI;
     }
 
     hatching = ctx.createPattern(document.querySelector("#hatching"), "repeat")
@@ -209,6 +228,7 @@ let render = () => {
     if (distance(offset.x, offset.y, offset_goal.x, offset_goal.y) > 1 && !attached_to_mouse) {
         offset.x = Math.Lerp(offset.x, offset_goal.x, .1);
         offset.y = Math.Lerp(offset.y, offset_goal.y, .1);
+        paper.style.backgroundPosition = offset.x + "px " + offset.y + "px"
     }
 
     ctx.fillStyle = "white"
@@ -450,6 +470,11 @@ function loadText() {
     })
 }
 let textPoints = []
+let borders = []
+
+function prepareBorders() {
+
+}
 
 function prepareText() {
     log("preparing text")
@@ -585,6 +610,10 @@ function findValidAreas() {
 
     buildSplineFromOrder()
 
+    let center = getTextBoxCenter(order[current_goal][0]);
+    log(current_goal, center)
+    offset_goal.x = -center.x * scale + longest / 2 * Math.HALF_PI;
+    offset_goal.y = -center.y * scale + longest / 2 * Math.HALF_PI;
 
     /* for (let i = 0; i < textBoxes.length; i++) {
         for (let n of neighbourhood[i]) {
@@ -928,7 +957,7 @@ function displaySpline() {
     let s = transformSpline();
     ctx.beginPath()
     ctx.fillStyle = "maroon"
-    ctx.arc(s[0], s[1], 10, 0, Math.TWO_PI)
+    ctx.arc(textBoxes[order[0][0]][0][0], textBoxes[order[0][0]][0][1], 10, 0, Math.TWO_PI)
     ctx.closePath()
     ctx.fill()
     ctx.moveTo(s[0], s[1])

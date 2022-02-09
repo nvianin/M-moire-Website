@@ -82,19 +82,39 @@ svg {
   z-index: 10000;
   bottom: 10%;
   left: 50%;
-  width: 70%;
-  height: 0%;
-  transform: translate(-50%, 0);
+  width: 90%;
+  height: 10px;
+  transform: translate(-50%, 10px);
 }
 #left-arrow {
   width: 0;
   height: 0;
   border-top: 30px solid transparent;
   border-bottom: 30px solid transparent;
-  border-right: 30px solid blue;
+  border-right: 30px solid #222;
+  opacity: 0.7;
+  mix-blend-mode: multiply;
   transform: scale(150%, 50%);
 }
-#right-arrow {
+#left-arrow:hover {
+  border-right: 30px solid #000;
 }
-.arrow {
+#right-arrow {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-top: 30px solid transparent;
+  border-bottom: 30px solid transparent;
+  border-left: 30px solid #222;
+  opacity: 0.7;
+  mix-blend-mode: multiply;
+  transform: scale(150%, 50%);
+}
+#right-arrow:hover {
+  border-left: 30px solid #000;
+}
+.arrow:hover {
+  cursor: pointer;
 }
